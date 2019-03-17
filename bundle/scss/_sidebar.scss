@@ -1,0 +1,38 @@
+.sidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 300px;
+    box-sizing: border-box;
+    z-index: 4;
+
+    background: var(--sidebar-bg);
+
+    @include appnav {
+        top: auto;
+        bottom: 0;
+        height: 40px;
+        width: 100%;
+        box-shadow: 0 4px 15px #19191f;
+    }
+
+    & > .inner {
+        background: white;
+        height: 100%;
+        box-sizing: border-box;
+        padding: 21px;
+        position: relative;
+        width: 217px;
+
+        @include appnav {
+            width: 100%;
+            padding: 4px 10px;
+        }
+    }
+
+    
+    
+
+}

@@ -1,0 +1,27 @@
+{
+  "name": "image-tool",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xanderfrangos/image-tool.git"
+  },
+  "author": "Xander Frangos",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/xanderfrangos/image-tool/issues"
+  },
+  "homepage": "https://github.com/xanderfrangos/image-tool#readme",
+  "dependencies": {
+    "compress-images": "^1.4.6",
+    "del": "^4.0.0",
+    "express": "^4.16.4",
+    "express-fileupload": "^1.1.3-alpha.1",
+    "sharp": "^0.21.3",
+    "uuid": "^3.3.2"
+  }
+}

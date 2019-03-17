@@ -1,0 +1,47 @@
+clear, .clear {
+    &:after,
+    &:before {
+        content: ' ';
+        display: block;
+        clear: both;
+    }
+}
+
+html, body {
+    font-family: "Nunito", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    color: var(--text-base);
+    line-height: 1;
+    background: var(--base-bg);
+    
+    @include appnav {
+        font-size: 15px;
+    }
+}
+
+body {
+    @extend clear;
+}
+
+#file {
+    display: none;
+}
+
+.page {
+    height: 100vh;
+    width:100%;
+    background: var(--base-bg);
+    position: relative;
+    overflow: auto;
+}
+
+img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+
+shadow {
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+}

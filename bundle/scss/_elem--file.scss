@@ -1,0 +1,156 @@
+.elem--file {
+    user-select: none;
+
+    &:nth-of-type(even) {
+        background: var(--base-bg-alt);
+    }
+    
+    & > .inner {
+        padding: 20px;
+        width: 100%;
+        display: flex;
+        direction: row;
+        justify-content: space-between;
+        align-items: center;
+        box-sizing: border-box;
+    }
+
+    .preview {
+        @extend shadow;
+        will-change: transform;
+
+        & > .inner {
+            width: 84px;
+            height: 84px;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+            background: white url('unknown.svg') center center repeat;
+            background-color: var(--preview-bg);
+            background-size: cover;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 100%;
+            background: var(--color-primary);
+            opacity: 0.9;
+            transition: width 0.1s, opacity 0.3s 0.2s;
+            z-index: 1;
+            opacity: 0;
+        }
+        img {
+            display: none;
+        }
+    }
+
+    .details {
+        padding: 0 20px;
+        flex: 1;
+        min-width: 0;
+
+        span {
+            & + span {
+                margin-left: 4px;
+            }
+        }
+
+        .title {
+            font-size: 26px;
+            font-weight: 700;
+            white-space: nowrap;
+            margin-bottom: 8px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis
+        }
+
+        .subtitle {
+            font-size: 13px;
+            .bold {
+                color: var(--color-primary);
+                font-weight: 700;
+            }
+        }
+
+    }
+
+    .actions {
+        padding-right: 10px;
+        .save-button {
+            @extend shadow;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            flex-direction: column;
+            background: var(--color-primary);
+            align-content: center;
+            justify-content: center;
+            justify-items: center;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: background 0.1s;
+
+            animation: saveButtonIn 0.3s;
+            @keyframes saveButtonIn {
+                0% { transform: scale(0) rotate(60deg); }
+                100% { transform: scale(1) rotate(0deg); }
+            }
+
+            display: none;
+
+            &:hover {
+                background: var(--color-button-hover);
+            }
+
+            svg {
+                fill: white;
+                display: block;
+                margin: auto;
+                width: 35px;
+                height: 35px;
+            }
+
+        }
+    }
+
+
+    &[data-status='uploading'] {
+        .preview {
+            & > .inner {
+                animation: uploadingPulse 1s infinite;
+                @keyframes uploadingPulse {
+                    0% { opacity:1; }
+                    50% { opacity:0.75; }
+                    100% { opacity:1; }
+                }
+            }
+            .progress-bar {
+                opacity: 0.85;
+            }
+        }
+    }
+
+    &[data-status='done'] {
+        .preview {
+            img {
+                display: block;
+            }
+        }
+        .actions {
+            .save-button {
+                display: flex;
+            }
+        }
+    }
+
+}
