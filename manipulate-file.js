@@ -225,6 +225,7 @@ let threadNum = -1
 process.on('message', (data) => {
     if (data.type == "job") {
         processQueue.push(data)
+        sendGenericMessage(`Recieved job ${data.uuid} | Current queue: ${processQueue.length}`)
         sendQueueUpdate()
         checkCanDoJob()
     } else if (data.type == 'setThreadNum') {
@@ -238,6 +239,14 @@ function sendQueueUpdate() {
     process.send({
         type: 'queueLength',
         result: processQueue.length,
+        threadNum: threadNum
+    })
+}
+
+function sendGenericMessage(message) {
+    process.send({
+        type: 'generic',
+        message: message,
         threadNum: threadNum
     })
 }
@@ -260,8 +269,10 @@ async function checkCanDoJob() {
             })
 
             // Remove old job and make not busy
-            processQueue.splice(0)
+            processQueue.splice(0, 1)
             processBusy = false
+
+            sendGenericMessage(`Finished job ${data.uuid} | Current queue: ${processQueue.length}`)
 
             // Finished job, start another
             checkCanDoJob()
@@ -279,7 +290,7 @@ async function checkCanDoJob() {
             })
 
             // Remove old, errored-out job
-            processQueue.splice(0)
+            processQueue.splice(0, 1)
             processBusy = false
 
             // Try next job

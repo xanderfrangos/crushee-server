@@ -81,7 +81,7 @@ printQueues = () => {
     process.stdout.cursorTo(0);
     process.stdout.write(`[${Date.now()}] Thread queues: ` + outStrs.join(" | ") + "\r")
 }
-setInterval(printQueues, 1000)
+//setInterval(printQueues, 1000)
 
 
 
