@@ -72,7 +72,7 @@ for (let i = 0; i < maxProcessingThreads; i++) {
 }
 
 // Print queues to console
-setInterval(() => {
+printQueues = () => {
     let outStrs = []
     for (let i = 0; i < fileProcessorThreads.length; i++) {
         outStrs.push(`${fileProcessorThreads[i].queue}`)
@@ -80,8 +80,8 @@ setInterval(() => {
     process.stdout.clearLine();
     process.stdout.cursorTo(0);
     process.stdout.write(`[${Date.now()}] Thread queues: ` + outStrs.join(" | ") + "\r")
-}, 333)
-
+}
+setInterval(printQueues, 1000)
 
 
 
