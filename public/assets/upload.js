@@ -288,7 +288,7 @@ function createNewFileHTML(file) {
                     </div>
                 </div>
     `;
-    $('.page--files--list').append(html);
+    $('.page--files--list').prepend(html);
     file.bind()
 }
 
