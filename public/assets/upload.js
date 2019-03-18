@@ -178,16 +178,21 @@ function getFormattedSize(size) {
         outSize = size + " bytes"
     } else if (size < 1000 * 1000) {
         // KB
-        outSize = (size / 1000).toPrecision(3) + "KB"
+        outSize = (size / 1000).toFixed(1) + "KB"
     } else if (size < 1000 * 1000 * 1000) {
         // MB
-        outSize = (size / (1000 * 1000)).toPrecision(3) + "MB"
+        outSize = (size / (1000 * 1000)).toFixed(1) + "MB"
     }
     return outSize
 }
 
 function getFormattedPercent(start, end) {
-    return ((100 - ((end / start) * 100)).toPrecision(2) + "% smaller")
+    if(start < end) {
+        return ((100 + ((end / start) * 100)).toFixed(0) + "% larger")
+    } else {
+        return ((100 - ((end / start) * 100)).toFixed(0) + "% smaller")
+    }
+    
 }
 
 
