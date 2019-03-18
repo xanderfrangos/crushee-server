@@ -6,6 +6,8 @@
     height: 100%;
     z-index: 2;
     box-shadow: 0 -15px 35px rgba(33,33,33,0.5);
+    box-sizing: border-box;
+    padding-bottom: 100px;
 
     //transition: transform 0.9s, box-shadow 0.9s;
     transform: translateY(130%);
@@ -13,14 +15,36 @@
     &.show {
         transform: translateY(0%);
         box-shadow: 0 20px 35px rgba(33,33,33,0.5);
+
+        & ~ .floating-buttons {
+            display: block;
+        }
+    }
+
+    
+    
+}
+
+.page--files--after-list {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    & > * {
+        font-size: 13px;
+        font-weight: 700;
+        padding: 20px;
+    }
+
+    .totals {
+        span {
+            color: var(--color-primary);
+            font-weight: 800;
+        }
     }
 
     .add-file {
         display: block;
-        text-align: center;
-        font-size: 13px;
-        font-weight: 700;
-        padding: 20px;
         cursor: pointer;
         user-select: none;
 
@@ -29,54 +53,55 @@
         }
     }
 
-    .floating-buttons {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        padding: 15px 8px;
-        box-sizing: border-box;
+}
 
-        display: none;
-        
 
-        & > .inner {
-            display: flex;
-            flex-direction: row;
-            justify-content: stretch;
-            max-width: 600px;
-            margin: auto;
+
+.floating-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 8px;
+    box-sizing: border-box;
+    display: none;
+    z-index: 4;
+
+    & > .inner {
+        display: flex;
+        flex-direction: row;
+        justify-content: stretch;
+        max-width: 600px;
+        margin: auto;
+    }
+
+    .button {
+        @extend shadow;
+        background: var(--color-secondary);
+        padding: 12px 30px;
+        font-size: 16px;
+        font-weight: 800;
+        color: white;
+        border-radius: 50px;
+        text-align: center;
+        text-transform: uppercase;
+        margin: 0px 5px;
+        user-select: none;
+        cursor: pointer;
+        transition: background 0.1s;
+
+        &.big {
+            font-size: 20px;
+            padding: 10px 30px;
+            flex: 1;
+        }
+        &.primary {
+            background: var(--color-primary)
         }
 
-        .button {
-            @extend shadow;
-            background: var(--color-secondary);
-            padding: 12px 30px;
-            font-size: 16px;
-            font-weight: 800;
-            color: white;
-            border-radius: 50px;
-            text-align: center;
-            text-transform: uppercase;
-            margin: 0px 5px;
-            user-select: none;
-            cursor: pointer;
-            transition: background 0.1s;
-
-            &.big {
-                font-size: 20px;
-                padding: 10px 30px;
-                flex: 1;
-            }
-            &.primary {
-                background: var(--color-primary)
-            }
-
-            &:hover {
-                background: var(--color-button-hover);
-            }
+        &:hover {
+            background: var(--color-button-hover);
         }
-
     }
 
 }

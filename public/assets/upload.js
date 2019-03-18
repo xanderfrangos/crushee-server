@@ -156,6 +156,7 @@ function UploadedFileCallback(data, file) {
     file.uuid = data.uuid
     file.url = data.dl
     file.preview = data.preview
+    file.name = data.filename
 
     file.setStatus("done")
 
@@ -189,18 +190,16 @@ $(".action--add-file").click(function (e) {
 });
 
 
-// <span>1.12MB</span><span>&centerdot;</span><span class="bold">32% smaller</span>
 function setStatus(inStatus) {
     let status = inStatus.toLowerCase()
     this.status = status
     this.elem.attr('data-status', status)
     if (status === "done") {
         var size = getFormattedSize(this.endSize)
-        var percent = function (start, end) {
-            return ((100 - ((end / start) * 100)).toPrecision(2) + "% smaller")
-        }
+        var percent = getFormattedPercent
         this.elem.find('.preview img').attr('src', this.preview)
         this.elem.find('.details .subtitle').html(`<span>${size}</span><span>&centerdot;</span><span class="bold">${percent(this.startSize, this.endSize)}</span>`)
+        updateTotals()
     } else if(status === "error") {
         this.elem.find('.details .subtitle').html(`<span class="bold error">Error: Could not process this file</span>`)
     }
@@ -219,6 +218,24 @@ function getFormattedSize(size) {
         outSize = (size / (1000 * 1000)).toPrecision(3) + "MB"
     }
     return outSize
+}
+
+function getFormattedPercent(start, end) {
+    return ((100 - ((end / start) * 100)).toPrecision(2) + "% smaller")
+}
+
+
+function updateTotals() {
+    var totalStart = 0;
+    var totalEnd = 0;
+    for(var i in files.list) {
+        totalStart += files.list[i].startSize
+        totalEnd += files.list[i].endSize
+    }
+
+    var size = getFormattedSize(totalEnd)
+    var percent = getFormattedPercent(totalStart, totalEnd);
+    $(".page--files--after-list .totals").html(`Total saved: ${size} &middot; <span>${percent}</span>`)
 }
 
 
@@ -259,10 +276,6 @@ function fileUploading(name) {
     createNewFileHTML(file)
     return file
 }
-
-
-
-// <span>1.12MB</span><span>&centerdot;</span><span class="bold">32% smaller</span>
 
 var showingList = false;
 function createNewFileHTML(file) {

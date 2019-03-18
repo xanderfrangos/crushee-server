@@ -2,6 +2,8 @@
 
 <head>
     <title>Crushee</title>
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
     <script src="assets/jquery.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,400i,600,600i,700,700i,800,900"
         rel="stylesheet">
@@ -9,7 +11,7 @@
 </head>
 
 <body>
-    <div class="base" id="app">
+    <div class="base no-sidebar" id="app">
         <div class="base--inner">
             <div class="page page--start action--add-file">
                 <div class="inner">
@@ -30,19 +32,18 @@
 
                 </div>
 
-                
-
-                <div class="add-file action--add-file">
-                    + Add file(s)
+                <div class="page--files--after-list">
+                    <div class="totals">Total saved: 0 KB</div>
+                    <div class="add-file action--add-file">+ Add file(s)</div>
                 </div>
 
-                <div class="floating-buttons">
-                    <div class="inner">
-                            <div class="button primary big action--download-all">Download All</div>
-                            <div class="button action--recompress">Re-Crush</div>
-                    </div>
+            </div>
+            
+            <div class="floating-buttons">
+                <div class="inner">
+                        <div class="button primary big action--download-all">Download All</div>
+                        <div class="button action--recompress">Re-Crush</div>
                 </div>
-
             </div>
 
         </div>
@@ -54,6 +55,8 @@
     </div>
     <input type="file" id="file" name="file" multiple />
     <script src="assets/upload.js"></script>
+    <script>if (window.module) module = window.module;</script>
+
 </body>
 
 </html>

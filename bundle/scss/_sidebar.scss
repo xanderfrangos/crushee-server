@@ -1,5 +1,4 @@
 .sidebar {
-    display: none;
     position: fixed;
     top: 0;
     right: 0;
@@ -35,4 +34,11 @@
     
     
 
+}
+
+#app.no-sidebar {
+    padding-right: 0;
+    .sidebar {
+        display: none;
+    }
 }
