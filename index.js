@@ -205,7 +205,7 @@ app.all('/health', (req, res) => {
 })
 
 // Start listening
-const port = process.env.PORT | 1603
+const port = process.env.PORT | process.env.CRUSHEE_PORT | 1603
 app.listen(port, (e) => {
     console.log(`Starting server on port ${port}`)
 })
