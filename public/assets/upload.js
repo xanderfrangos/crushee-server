@@ -17,12 +17,6 @@ Upload.prototype.doUpload = function (file) {
     var formData = new FormData();
     this.fileData = file
 
-    var uploadID = makeNotification("progress-bar");
-
-    var shortName = (this.file.name.length > 25 ? this.file.name.substr(0, 25) + "..." : this.file.name);
-    $("#notif" + uploadID + " .text").html("Uploading " + shortName);
-
-
     formData.append("file", this.file, this.getName());
 
     $.ajax({
@@ -71,40 +65,12 @@ Upload.prototype.progressHandling = function (event) {
     event.target.file.elem.find('div.progress-bar').css("width", percent + "%");
 
     if (percent == 100) {
-
+        event.target.file.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
     }
 
 };
 
 
-var notificationCount = 0;
-function makeNotification(type) {
-    var notificationID = notificationCount++;
-    var outHTML = '<div id="notif' + notificationID + '" class="view--notifications--item progress-bar"><div class="progress"></div><div class="text">Uploading file...</div></div>';
-    $(".view--notifications").append(outHTML);
-    return notificationID;
-}
-
-function clearNotification(ID) {
-    $("#notif" + ID).remove();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-var status = {
-    uploading: false,
-    resetting: false
-};
 
 $("html").bind("dragover", function (e) {
     e.preventDefault();
