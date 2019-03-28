@@ -154,3 +154,42 @@
     }
 
 }
+
+
+@mixin elem--file--mode-small() {
+    .elem--file {
+        & > .inner {
+            padding: 15px;
+        }
+        .details {
+            padding: 0 15px;
+            .title {
+                font-size: 20px;
+            }
+            .subtitle {
+                font-size: 12px;
+            }
+        }
+        .preview {
+            & > .inner {
+                width: 42px;
+                height: 42px;
+            }
+        }
+        .actions {
+            .save-button {
+                width: 48px;
+                height: 48px;
+
+                svg {
+                    width: 32px;
+                    height: 32px;
+                }
+            }
+        }
+    }
+}
+
+.elem--file--mode-small {
+    @include elem--file--mode-small();
+}

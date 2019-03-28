@@ -2,8 +2,8 @@
 
 <head>
     <title>Crushee</title>
-    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
-
+    <script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="assets/jquery.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,400i,600,600i,700,700i,800,900"
         rel="stylesheet">
@@ -11,7 +11,7 @@
 </head>
 
 <body>
-    <div class="base no-sidebar" id="app">
+    <div class="base" id="app">
         <div class="base--inner">
             <div class="page page--start action--add-file">
                 <div class="inner">
@@ -38,25 +38,157 @@
                 </div>
 
             </div>
-            
+
             <div class="floating-buttons">
                 <div class="inner">
-                        <div class="button primary big action--download-all">Download All</div>
-                        <div class="button action--recompress">Re-Crush</div>
+                    <div class="button primary big action--download-all">Download All</div>
+                    <div class="button action--recompress">Re-Crush</div>
                 </div>
             </div>
 
         </div>
         <div class="sidebar">
-            <div class="sidebar--inner">
-
+            <div class="inner">
+                <div class="sidebar--section">
+                    <div class="row center">
+                        <div class="col">
+                            <div class="sidebar--header">Resize</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label>Max Width</label>
+                            <input name="resize.width">
+                        </div>
+                        <div class="col">
+                            <label>Max Height</label>
+                            <input name="resize.height">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label>Crop</label>
+                            <div class="sublabel">Width and height required</div>
+                        </div>
+                        <div class="col">
+                            <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="resize.crop">
+                                <div></div>
+                                <input type="hidden" name="resize.crop" id="resizeCrop" data-linked="resize.crop" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar--section">
+                    <div class="row center">
+                        <div class="col">
+                            <div class="sidebar--header">Convert</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label>Convert to WebP</label>
+                        </div>
+                        <div class="col">
+                            <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="webp.make">
+                                <div></div>
+                                <input type="hidden" name="webp.make" id="resizeCrop" data-linked="webp.make" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <label>Convert to JPEG</label>
+                        </div>
+                        <div class="col">
+                            <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="jpg.make">
+                                <div></div>
+                                <input type="hidden" name="jpg.make" id="resizeCrop" data-linked="jpg.make" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar--section">
+                    <div class="row center">
+                        <div class="col">
+                            <div class="sidebar--header">Quality</div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col flex-1">
+                            <label>JPEG Quality</label>
+                            <div class="input--range">
+                                <input type="range" min="1" max="99" name="jpg.quality" class="range" data-linked="jpg.quality" />
+                                <input type="number" min="1" max="99" name="jpg.quality" class="val" data-linked="jpg.quality" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col flex-1">
+                            <label>PNG Min Quality</label>
+                            <div class="input--range">
+                                <input type="range" min="1" max="99" name="png.qualityMin" class="range" data-linked="png.qualityMin" />
+                                <input type="number" min="1" max="99" name="png.qualityMin" class="val" data-linked="png.qualityMin" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col flex-1">
+                            <label>PNG Max Quality</label>
+                            <div class="input--range">
+                                <input type="range" min="1" max="99" name="png.qualityMax" class="range" data-linked="png.qualityMax" />
+                                <input type="number" min="1" max="99" name="png.qualityMax" class="val" data-linked="png.qualityMax" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col flex-1">
+                            <label>WebP Quality</label>
+                            <div class="input--range">
+                                <input type="range" min="1" max="99" name="webp.quality" class="range" data-linked="webp.quality" />
+                                <input type="number" min="1" max="99" name="webp.quality" class="val" data-linked="webp.quality" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sidebar--section">
+                            <div class="row center">
+                                <div class="col">
+                                    <div class="sidebar--header">App</div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <label>Overwrite originals</label>
+                                    <div class="sublabel">Automatically replace original images</div>
+                                </div>
+                                <div class="col">
+                                    <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="app.overwrite">
+                                        <div></div>
+                                        <input type="hidden" name="app.overwrite" id="resizeCrop" data-linked="app.overwrite" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <label>Dark Mode</label>
+                                </div>
+                                <div class="col">
+                                    <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-action="toggleDarkMode" data-linked="app.darkMode">
+                                        <div></div>
+                                        <input type="hidden" name="app.darkMode" id="resizeCrop" data-linked="app.darkMode" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                </div>
             </div>
         </div>
     </div>
     <input type="file" id="file" name="file" multiple />
-    <script src="assets/upload.js"></script>
+    <script src="assets/upload.js?1"></script>
     <script>if (window.module) module = window.module;</script>
-
+    <script>
+    
+    </script>
 </body>
 
 </html>

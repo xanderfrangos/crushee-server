@@ -18,6 +18,7 @@ Upload.prototype.doUpload = function (file) {
     this.fileData = file
 
     formData.append("file", this.file, this.getName());
+    formData.append("settings", JSON.stringify(settings))
 
     $.ajax({
         type: "POST",
@@ -124,6 +125,8 @@ function UploadedFileCallback(data, file) {
     file.preview = data.preview
     file.name = data.filename
 
+    file.setFilename(file.name)
+
     file.setStatus("done")
 
 }
@@ -155,6 +158,10 @@ $(".action--add-file").click(function (e) {
     return false;
 });
 
+
+function setFilename(filename) {
+    this.elem.find(".title").text(filename);
+}
 
 function setStatus(inStatus) {
     let status = inStatus.toLowerCase()
@@ -225,6 +232,7 @@ var files = {
             startSize: 0,
             endSize: 0,
             setStatus: setStatus,
+            setFilename: setFilename,
             bind: function () { 
                 this.elem = $(".elem--file[data-id='" + this.id + "']") 
                 this.elem.find('.actions .save-button').click(actionSaveButton)
@@ -323,3 +331,120 @@ document.addEventListener('dragover', function (e) {
 });
 
 
+
+
+
+
+
+
+$("[data-linked]").on("change", function(e) {
+    var linkedTo = $(this).attr("data-linked");
+    $("input[data-linked='" + linkedTo + "']").val($(this).val());
+});
+
+$("[data-linked]").on("input", function(e) {
+    var linkedTo = $(this).attr("data-linked");
+    $("input[data-linked='" + linkedTo + "']").val($(this).val());
+});
+
+$(".input--toggle input").on("change", function(e) {
+    syncInput(this)
+});
+
+$(".sidebar--section input").on("change", function(e) {
+    updateSetting($(this).attr("name"), $(this).val())
+});
+
+$(".input--toggle").click(function(){
+    var input = $(this).children("input");
+    console.log(input.attr("value"))
+    input.attr("value", (input.attr("value") == "true" ? "false" : "true"))
+    
+    syncInput(this)
+});
+
+function syncInput(elem) {
+    if($(elem).hasClass("input--toggle")) {
+        $(elem).attr("data-value", $(elem).children("input").eq(0).attr("value"))
+        updateSetting($(elem).attr("data-linked"), $(elem).children("input").eq(0).attr("value"))
+    }
+    if($(elem).attr("data-action")) {
+        window[$(elem).attr("data-action")](elem)
+    }
+};
+
+
+
+var defaultSettings = {
+    resize: {
+        width: "",
+        height: "",
+        crop: false
+    },
+    jpg: {
+        quality: 85,
+        make: false
+    },
+    png: {
+        qualityMin: 50,
+        qualityMax: 99
+    },
+    gif: {
+        colors: 128
+    },
+    webp: {
+        quality: 99,
+        make: false,
+        only: false
+    },
+    app: {
+        overwite: false,
+        darkMode: false
+    }
+}
+
+
+var getSettings = function() {
+    var encoded = localStorage.getItem("settings");
+    var parsed = JSON.parse(encoded);
+    var merged = Object.assign(defaultSettings, parsed);
+    return merged;
+}
+
+function writeSettings() {
+    var encoded = JSON.stringify(settings);
+    localStorage.setItem("settings", encoded);
+}
+
+var settings = getSettings();
+
+
+function updateSetting(setting, value) {
+    var keys = setting.split(".");
+    if(keys.length == 1)
+        settings[keys[0]] = value;
+    else if(keys.length == 2)
+        settings[keys[0]][keys[1]] = value;
+    else if(keys.length == 3)
+        settings[keys[0]][keys[1]][keys[2]] = value;
+
+    writeSettings();
+}
+
+$(".sidebar--section input").each(function(e) {
+    var input = $(this);
+    var settingKeys = input.attr("name").split(".");
+    var arr = settings;
+    for(var i = 0; i < settingKeys.length; i++) {
+        arr = arr[settingKeys[i]];
+    }
+    $(this).val(arr);
+});
+$("[data-linked]").each(function() {
+    syncInput(this);
+})
+
+
+function toggleDarkMode(elem) {
+    $("body").attr("data-theme", ($(elem).attr("data-value") == "true" ? "dark" : "light"))
+}

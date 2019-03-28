@@ -10,9 +10,9 @@ console.log = () => {}
 
 // Default image settings
 let imgSettings = {
-    size: {
-        width: 200,
-        height: 200,
+    resize: {
+        width: "",
+        height: "",
         crop: false
     },
     jpg: {
@@ -20,12 +20,14 @@ let imgSettings = {
     },
     png: {
         qualityMin: 50,
-        qualityMax: 100
+        qualityMax: 99
     },
     gif: {
         colors: 128
     },
-    webP: {
+    webp: {
+        quality: 80,
+        alphaQuality: 100,
         make: false,
         only: false
     }
@@ -33,7 +35,7 @@ let imgSettings = {
 
 // Default engine settings for compressor
 const jpgEngine = { engine: 'mozjpeg', command: ['-quality', '85'] }
-const pngEngine = { engine: 'pngquant', command: ['--quality=50-80', '--speed=3'] }
+const pngEngine = { engine: 'pngquant', command: ['--quality=50-80', '--speed=2'] }
 const svgEngine = { engine: 'svgo', command: '--multipass' }
 const gifEngine = { engine: 'gifsicle', command: ['--colors', '128', '--use-col=web'] }
 const webEngine = { engine: 'webp', command: false }
@@ -55,13 +57,29 @@ const noEngine = { engine: false, command: false }
 //
 //   Manipulate images
 //
-async function processImage(file, outFolder) {
-
-    const ext = path.extname(file).toLowerCase()
-    const outPath = outFolder + "file" + ext
+async function processImage(file, outFolder, options = {}) {
+    const settings = Object.assign(imgSettings, options)
+    let ext = path.extname(file).toLowerCase()
+    
+    sendGenericMessage(JSON.stringify(settings))
     try {
         let image = sharp(file)
-        //image.resize(1200, 1200, {fit: "inside"})
+        if(settings.resize.width || settings.resize.height) {
+            image.resize(
+                (settings.resize.width ? parseInt(settings.resize.width) : null), 
+                (settings.resize.height ? parseInt(settings.resize.height) : null), 
+                {fit: (settings.resize.crop == "true" ? "cover" : "inside")}
+                )
+        }
+
+        if(options.jpg.make == "true") {
+            ext = ".jpg"
+        }
+
+        if(options.webp.make == "true") {
+            ext = ".webp"
+        }
+        
         if (ext === ".jpg" || ext === ".jpeg") {
             image.jpeg({
                 quality: 100,
@@ -69,10 +87,15 @@ async function processImage(file, outFolder) {
             })
         } else if (ext === ".png") {
             image.png()
+        } else if(ext === ".webp") {
+            image.webp({
+                quality: parseInt(settings.webp.quality)
+            })
         } else {
             return false
         }
 
+        const outPath = outFolder + "file" + ext
         let promise = image.toFile(outPath)
             .then(() => {
                 return outPath
@@ -90,10 +113,28 @@ async function processImage(file, outFolder) {
 //    Compress images after manipulation
 //
 async function compressFile(file, outFolder, options = {}) {
+    const settings = Object.assign(imgSettings, options)
+
+    const inExt = path.extname(file).toLowerCase()
+
+    // Abort unsupported file types
+    // ...mostly webp
+    if(!(inExt == ".png" || inExt == ".jpg" || inExt == ".jpeg" || inExt == ".svg" || inExt == "gif"))
+        return file
+
+    jpgOptions = Object.assign(jpgEngine)
+    jpgOptions.command[1] = settings.jpg.quality + ""
+
+    pngOptions = Object.assign(pngEngine)
+    if(settings.png.qualityMin > settings.png.qualityMax)
+        settings.png.qualityMax = settings.png.qualityMin;
+    pngOptions.command[0] = `--quality=${settings.png.qualityMin}-${settings.png.qualityMax}`
+
     return new Promise((resolve, reason) => {
+        
         compress_images(file, outFolder + "min.", { compress_force: true, statistic: false, autoupdate: false }, false,
             { jpg: jpgEngine },
-            { png: pngEngine },
+            { png: pngOptions },
             { svg: svgEngine },
             { gif: gifEngine },
             (a, b, c) => {
@@ -143,32 +184,22 @@ async function makePreview(file, outFolder) {
 //
 //   Process queued image
 //
-async function job(f, o, options = {}) {
+async function job(uuid, fn, f, o, options = {}) {
 
-    // Make UUID
-    let uuid = uuidv1();
     let uuidDir = o + uuid + "/"
 
-    // Check if folder UUID exists, reroll
-    while (fs.existsSync(uuidDir)) {
-        consoleLog("manipulate-file.js: " + "UUID exists, rerolling")
-        uuid = uuidv1();
-        uuidDir = o + uuid + "/"
-    }
-    fs.mkdirSync(uuidDir)
-
     // Convert with Sharp
-    let resized = await processImage(f, uuidDir)
+    let resized = await processImage(f, uuidDir, options)
     if (!resized) {
-        consoleLog("Aborted because of failed resize")
-        return false;
+        consoleLog("Failed manipulation! Returning original file :(")
+        resized = f;
     }
 
     // Compress
-    let compressed = await compressFile(resized, uuidDir)
+    let compressed = await compressFile(resized, uuidDir, options)
     if (!compressed) {
-        consoleLog("Aborted because of failed compress")
-        return false;
+        consoleLog("Failed compress! Returning original file :(")
+        compressed = f;
     }
 
     // Collect sizes to send back
@@ -176,8 +207,17 @@ async function job(f, o, options = {}) {
     let finalSize = fs.statSync(compressed).size
 
     // Copy finished file to final location
-    const finalFile = uuidDir + path.basename(f)
-    fs.copyFileSync(compressed, finalFile)
+    fs.mkdirSync(uuidDir + "crushed/")
+    let finalFile = uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(compressed)
+
+    if(sourceSize < finalSize) {
+        fs.copyFileSync(f, uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(fn))
+        finalSize = sourceSize;
+    } else {
+        fs.copyFileSync(compressed, finalFile)
+    }
+
+    
 
     // Make thumbnails
     fs.mkdirSync(uuidDir + "preview/")
@@ -189,7 +229,7 @@ async function job(f, o, options = {}) {
 
     // Get rid of unnecessary files
     try {
-        del(resized)
+        //del(resized)
         del(compressed)
     } catch (e) {
         consoleLog(e)
@@ -198,7 +238,7 @@ async function job(f, o, options = {}) {
     // Build and send results
     let result = {
         uuid: uuid,
-        filename: path.basename(f),
+        filename: path.basename(finalFile, path.extname(finalFile)) + path.extname(finalFile),
         sourcesize: sourceSize,
         finalsize: finalSize,
         preview: minPreview
@@ -258,7 +298,7 @@ async function checkCanDoJob() {
 
         processBusy = true
         let data = processQueue[0]
-        job(data.payload[0], data.payload[1], data.payload[2]).then((result) => {
+        job(...data.payload).then((result) => {
 
             // Send response that the job was finished
             process.send({

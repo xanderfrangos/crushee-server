@@ -5,6 +5,8 @@ const path = require("path")
 const { fork } = require('child_process');
 const del = require('del')
 const uuidv1 = require('uuid/v1')
+const JSZip = require("jszip");
+
 
 const outPath = "public/out/"
 const tmpPath = outPath + "tmp/"
@@ -35,10 +37,6 @@ function cleanUp() {
 
     if (!fs.existsSync(outPath)) {
         fs.mkdirSync(outPath, { recursive: true })
-    }
-
-    if (!fs.existsSync(tmpPath)) {
-        fs.mkdirSync(tmpPath, { recursive: true })
     }
 
     console.log("Done cleaning!")
@@ -105,19 +103,16 @@ function getAvailableThread() {
     return fileProcessorThreads[availableThreadNum].thread
 }
 
-async function processFile(inFile, outDir, options = {}) {
+async function processFile(uuid, uploadName, inFile, outDir, options = {}) {
 
     // Get thread with least jobs
     const forked = getAvailableThread()
-
-    // UUID for tracking job
-    const uuid = uuidv1()
 
     // Send job to thread
     forked.send({
         type: 'job',
         uuid: uuid,
-        payload: [inFile, outDir, options]
+        payload: [uuid, uploadName, inFile, outDir, options]
     }, (e) => {
         if (e) {
             console.log(e)
@@ -170,23 +165,65 @@ app.post('/upload', function (req, res) {
 
     // Process uploaded image
     let file = req.files.file;
-    file.mv(tmpPath + file.name, function (err) {
+
+    // Make UUID
+    let uuid = uuidv1();
+    let uuidDir = outPath + uuid + "/"
+
+    // Check if folder UUID exists, reroll
+    while (fs.existsSync(uuidDir)) {
+        consoleLog("manipulate-file.js: " + "UUID exists, rerolling")
+        uuid = uuidv1();
+        uuidDir = outPath + uuid + "/"
+    }
+    fs.mkdirSync(uuidDir)
+    
+    const filePath = uuidDir + "source" + path.extname(file.name)
+    file.mv(filePath, function (err) {
         if (err) {
             return res.status(500).send(err);
         }
+        let settings = {}
+        try {
+            settings = JSON.parse(req.body.settings)
+        } catch (e) {
+            console.log("Couldn't decode recieved settings")
+        }
 
         // Send off to a thread
-        processFile(tmpPath + file.name, outPath).then((result) => {
+        processFile(uuid, file.name, filePath, outPath, settings).then((result) => {
             // Respond with crushed image and preview thumbnail
-            result.dl = 'crushed/' + result.uuid + '/' + result.filename
-            result.preview = 'crushed/' + result.uuid + '/preview/' + 'min.preview.jpg'
+            result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
+            result.preview = 'd/' + result.uuid + '/preview/' + 'min.preview.jpg'
             res.json(result);
         })
     });
 });
 
+
+app.post('/zip', function (req, res) {
+    let uuids = JSON.parse(req.param.uuids)
+    // let zip = new JSZip();
+})
+
+app.post('/recrush', function (req, res) {
+    let uuid = req.param.uuid
+    let original = req.param.fileName
+    const filePath = original
+
+    // THIS NO WORK
+    // Send off to a thread
+    processFile(uuid, original, filePath, outPath, settings).then((result) => {
+        // Respond with crushed image and preview thumbnail
+        result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
+        result.preview = 'd/' + result.uuid + '/preview/' + 'min.preview.jpg'
+        res.json(result);
+    })
+    
+})
+
 // Images that have been compressed will be served here
-app.use("/crushed", express.static(outPath, {
+app.use("/d", express.static(outPath, {
     'index': false,
     'setHeaders': setDownloadHeader
 }))
