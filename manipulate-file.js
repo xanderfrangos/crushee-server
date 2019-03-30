@@ -16,7 +16,7 @@ let imgSettings = {
         crop: false
     },
     jpg: {
-        quality: 85
+        quality: 95
     },
     png: {
         qualityMin: 50,
@@ -57,7 +57,7 @@ var debug = false;
 //
 //   Manipulate images
 //
-async function processImage(file, outFolder, options = {}) {
+async function processImage(file, outFolder, options = {}, quality = 100) {
     const settings = Object.assign(imgSettings, options)
     let ext = path.extname(file).toLowerCase()
 
@@ -67,8 +67,8 @@ async function processImage(file, outFolder, options = {}) {
         })
         if(settings.resize.width || settings.resize.height) {
             image.resize(
-                (settings.resize.width ? parseInt(settings.resize.width) : null), 
-                (settings.resize.height ? parseInt(settings.resize.height) : null), 
+                (settings.resize.width && parseInt(settings.resize.width) > 0 ? parseInt(settings.resize.width) : null), 
+                (settings.resize.height && parseInt(settings.resize.height) > 0 ? parseInt(settings.resize.height) : null), 
                 {fit: (settings.resize.crop == "true" ? "cover" : "inside")}
                 )
         }
@@ -82,23 +82,14 @@ async function processImage(file, outFolder, options = {}) {
         }
         
         if (ext === ".jpg" || ext === ".jpeg") {
+            ext = ".jpg" // Force .jpg because it's objectively correct
             image.flatten({
                 background: {r:255, g:255, b:255}
             })
-            if(settings.jpg.quality >= 99) {
-                image.jpeg({
-                    quality: 100,
-                    chromaSubsampling: '4:4:4'
-                })
-            } else {
-                image.jpeg({
-                    quality: 100,
-                    chromaSubsampling: '4:4:4',
-                    optimiseCoding: true,
-                    overshootDeringing: true,
-                    trellisQuantisation: true
-                })
-            }
+            image.jpeg({
+                quality: quality,
+                chromaSubsampling: '4:4:4'
+            })
             
         } else if (ext === ".png") {
             image.png()
@@ -110,7 +101,7 @@ async function processImage(file, outFolder, options = {}) {
             return false
         }
 
-        const outPath = outFolder + "file" + ext
+        const outPath = outFolder + "manipulated" + ext
         let promise = image.toFile(outPath)
             .then(() => {
                 return outPath
@@ -140,12 +131,22 @@ async function compressFile(file, outFolder, options = {}, jpgEngineName = "jpeg
     jpgOptions = Object.assign(jpgEngine)
     jpgOptions.command[1] = settings.jpg.quality + ""
 
-    jpgOptions.engine = "jpegRecompress"
-    jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + ""]
-
     if(jpgEngineName == "mozjpeg") {
         jpgOptions.engine = "mozjpeg"
-        jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize"]
+        if(parseInt(settings.jpg.quality) >= 95) {
+            sendGenericMessage("4:4:4 Chroma")
+            jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize", "-sample", "1x1"]
+        } else {
+            sendGenericMessage("4:2:0 Chroma")
+            jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize"]
+        }
+    } else {
+        jpgOptions.engine = "jpegRecompress"
+        if(parseInt(settings.jpg.quality) >= 95) {
+            jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + "", "--subsample", "disable"]
+        } else {
+            jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + "", "--method", "smallfry"]
+        }
     }
 
     pngOptions = Object.assign(pngEngine)
@@ -155,7 +156,7 @@ async function compressFile(file, outFolder, options = {}, jpgEngineName = "jpeg
 
     return new Promise((resolve, reason) => {
         
-        compress_images(file, outFolder + "min.", { compress_force: true, statistic: false, autoupdate: false }, false,
+        compress_images(file, outFolder + jpgOptions.engine + ".", { compress_force: true, statistic: false, autoupdate: false }, false,
             { jpg: jpgEngine },
             { png: pngOptions },
             { svg: svgEngine },
@@ -185,8 +186,8 @@ async function makePreview(file, outFolder) {
         let image = sharp(file)
         image.resize(200, 200, { fit: "cover" })
         image.jpeg({
-            quality: 100,
-            chromaSubsampling: '4:4:4'
+            quality: 75,
+            chromaSubsampling: '4:2:0'
         })
         let promise = image.toFile(outPath)
             .then(() => {
@@ -209,15 +210,16 @@ async function makePreview(file, outFolder) {
 //
 async function job(uuid, fn, f, o, options = {}) {
 
+
+    // JPEG Presets
+    // Max: 99
+    // High: 95
+    // Medium: 94
+    // Low: 88
+
     debug = (options.app.darkMode == "true" ? true : false)
 
     let uuidDir = o + uuid + "/"
-
-    sendGenericMessage("Clearing old files...")
-    // Delete old files if recrushing
-    del.sync(uuidDir + "ts")
-    deleteFolderRecursive(uuidDir + "preview/")
-    deleteFolderRecursive(uuidDir + "crushed/")
 
     sendGenericMessage("Manipulating...")
     // Convert with Sharp
@@ -227,8 +229,10 @@ async function job(uuid, fn, f, o, options = {}) {
         resized = f;
     }
 
+
+    // Use MozJPEG to adjust overall quality
     let tmpResize
-    if(parseInt(options.jpg.quality) < 99) {
+    if(path.extname(resized) == ".jpg" && parseInt(options.jpg.quality) < 95) {
         sendGenericMessage("MozCompressing...")
         resized = await compressFile(resized, uuidDir, options, "mozjpeg")
         if (!resized) {
@@ -238,8 +242,8 @@ async function job(uuid, fn, f, o, options = {}) {
     }
     debug = false
 
-    sendGenericMessage("Compressing...")
     // Compress
+    sendGenericMessage("Compressing...")
     let compressed = await compressFile(resized, uuidDir, options)
     if (!compressed) {
         consoleLog("Failed compress! Returning original file :(")
@@ -269,12 +273,22 @@ async function job(uuid, fn, f, o, options = {}) {
     fs.mkdirSync(uuidDir + "preview/")
     let preview = ""
     try {
-        preview = await makePreview(finalFile, uuidDir + "preview/")
-        preview = await compressFile(preview, uuidDir + "preview/")
+        preview = await makePreview(finalFile, uuidDir + "preview/", {})
     } catch(e) {
-
+        sendGenericMessage("ERROR: Creating preview failed")
     }
 
+    // Compress preview
+    try {
+        const compressedP = await compressFile(preview, uuidDir + "preview/", {
+            jpg: {
+                quality: 75
+            }
+        }, "mozjpeg")
+        preview = compressedP
+    } catch(e) {
+        sendGenericMessage("ERROR: Compressing preview failed")
+    }
 
     sendGenericMessage("Writing timestamp...")
     // Write timestamp for cleanup
@@ -283,8 +297,8 @@ async function job(uuid, fn, f, o, options = {}) {
     sendGenericMessage("Clearing temp files...")
     // Get rid of unnecessary files
     try {
-        await del(resized)
-        await del(compressed)
+        //await del(resized)
+        //await del(compressed)
     } catch (e) {
         consoleLog(e)
     }

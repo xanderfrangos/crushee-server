@@ -326,7 +326,7 @@ $(".page--comparison").click(function() {
     $(this).removeClass("show")
 })
 
-var beforeElem = $(".page--comparison .before")
+var beforeElem = $(".divider-wrap")
 $(".page--comparison").mousemove(function(e) {
     beforeElem.width(e.pageX)
 })
@@ -401,18 +401,18 @@ var defaultSettings = {
         crop: false
     },
     jpg: {
-        quality: 85,
+        quality: 95,
         make: false
     },
     png: {
         qualityMin: 50,
-        qualityMax: 99
+        qualityMax: 95
     },
     gif: {
         colors: 128
     },
     webp: {
-        quality: 99,
+        quality: 90,
         make: false,
         only: false
     },

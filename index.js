@@ -35,9 +35,14 @@ function cleanUp() {
         console.log(e)
     }
 
-    if (!fs.existsSync(outPath)) {
-        fs.mkdirSync(outPath, { recursive: true })
+    try {
+        if (!fs.existsSync(outPath)) {
+            fs.mkdirSync(outPath, { recursive: true })
+        }
+    } catch(e) {
+        console.log(e)
     }
+    
 
     console.log("Done cleaning!")
 
@@ -202,7 +207,7 @@ app.post('/upload', function (req, res) {
         processFile(uuid, file.name, filePath, outPath, settings).then((result) => {
             // Respond with crushed image and preview thumbnail
             result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
-            result.preview = 'd/' + result.uuid + '/preview/' + 'min.preview.jpg'
+            result.preview = 'd/' + result.uuid + '/preview/' + path.basename(result.preview)
             result.original = 'd/' + result.uuid + '/source' + path.extname(file.name)
             res.json(result);
         })
@@ -248,9 +253,10 @@ app.post('/recrush', function (req, res) {
 
     // Send off to a thread
     processFile(uuid, original, filePath, outPath, settings).then((result) => {
+        console.log(result.preview)
         // Respond with crushed image and preview thumbnail
         result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
-        result.preview = 'd/' + result.uuid + '/preview/' + 'min.preview.jpg'
+        result.preview = 'd/' + result.uuid + '/preview/' + path.basename(result.preview)
         result.original = 'd/' + result.uuid + '/source' + path.extname(original)
         res.json(result);
     })
