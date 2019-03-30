@@ -58,7 +58,13 @@ var debug = false;
 //   Manipulate images
 //
 async function processImage(file, outFolder, options = {}, quality = 100) {
-    const settings = Object.assign(imgSettings, options)
+    
+    // Merge and santize options
+    let settings = Object.assign(imgSettings, options)
+    settings.resize.width = (parseInt(settings.resize.width) > 5400 ? 5400 : settings.resize.width)
+    settings.resize.height = (parseInt(settings.resize.height) > 5400 ? 5400 : settings.resize.height)
+
+
     let ext = path.extname(file).toLowerCase()
 
     try {
@@ -259,7 +265,7 @@ async function job(uuid, fn, f, o, options = {}) {
     fs.mkdirSync(uuidDir + "crushed/")
     let finalFile = uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(compressed)
 
-    if(sourceSize < finalSize && path.extname(fn).toLowerCase() == path.extname(compressed).toLowerCase()) {
+    if(false && sourceSize < finalSize && path.extname(fn).toLowerCase() == path.extname(compressed).toLowerCase()) {
         sendGenericMessage("WARNING: New file is larger. Returning original...")
         fs.copyFileSync(f, uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(fn))
         finalSize = sourceSize;

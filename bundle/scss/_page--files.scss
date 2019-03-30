@@ -70,43 +70,16 @@
     box-sizing: border-box;
     display: none;
     z-index: 4;
-    background: var(--base-bg);
+    background: var(--base-bg-alt);
 
     & > .inner {
         display: flex;
         flex-direction: row;
         justify-content: stretch;
-        max-width: 600px;
+        max-width: 700px;
         margin: auto;
     }
 
-    .button {
-        @extend shadow;
-        background: var(--color-secondary);
-        padding: 12px 30px;
-        font-size: 16px;
-        font-weight: 800;
-        color: white;
-        border-radius: 50px;
-        text-align: center;
-        text-transform: uppercase;
-        margin: 0px 5px;
-        user-select: none;
-        cursor: pointer;
-        transition: background 0.1s;
 
-        &.big {
-            font-size: 20px;
-            padding: 10px 30px;
-            flex: 1;
-        }
-        &.primary {
-            background: var(--color-primary)
-        }
-
-        &:hover {
-            background: var(--color-button-hover);
-        }
-    }
 
 }
