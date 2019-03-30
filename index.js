@@ -138,6 +138,22 @@ async function processFile(uuid, uploadName, inFile, outDir, options = {}) {
 }
 
 
+getUUID = () => {
+        // Make UUID
+        let uuid = uuidv1();
+        let uuidDir = outPath + uuid + "/"
+    
+        // Check if folder UUID exists, reroll
+        while (fs.existsSync(uuidDir)) {
+            consoleLog("UUID exists, rerolling")
+            uuid = uuidv1();
+            uuidDir = outPath + uuid + "/"
+        }
+        fs.mkdirSync(uuidDir)
+        return uuid
+}
+
+
 
 
 /*
@@ -165,18 +181,10 @@ app.post('/upload', function (req, res) {
 
     // Process uploaded image
     let file = req.files.file;
+    const uuid = getUUID()
+    const uuidDir = outPath + uuid + "/"
 
-    // Make UUID
-    let uuid = uuidv1();
-    let uuidDir = outPath + uuid + "/"
-
-    // Check if folder UUID exists, reroll
-    while (fs.existsSync(uuidDir)) {
-        consoleLog("manipulate-file.js: " + "UUID exists, rerolling")
-        uuid = uuidv1();
-        uuidDir = outPath + uuid + "/"
-    }
-    fs.mkdirSync(uuidDir)
+    fs.writeFileSync(uuidDir + "filename", file.name)
     
     const filePath = uuidDir + "source" + path.extname(file.name)
     file.mv(filePath, function (err) {
@@ -195,6 +203,7 @@ app.post('/upload', function (req, res) {
             // Respond with crushed image and preview thumbnail
             result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
             result.preview = 'd/' + result.uuid + '/preview/' + 'min.preview.jpg'
+            result.original = 'd/' + result.uuid + '/source' + path.extname(file.name)
             res.json(result);
         })
     });
@@ -202,21 +211,47 @@ app.post('/upload', function (req, res) {
 
 
 app.post('/zip', function (req, res) {
-    let uuids = JSON.parse(req.param.uuids)
-    // let zip = new JSZip();
+    let files = JSON.parse(req.body.files)
+    let zip = new JSZip();
+    for(let file of files) {
+        zip.file(file.name, fs.readFileSync(outPath + "/" + file.uuid + "/crushed/" + file.name));
+    }
+    zip.generateAsync({
+        type:"nodebuffer",
+        compression: "DEFLATE",
+        compressionOptions: {
+            level: 9
+        }
+    })
+    .then((content) => {
+        const uuid = getUUID()
+        const zipPath = outPath + uuid + "/download.zip"
+        fs.writeFile(zipPath, content, () => {
+            res.json({
+                uuid,
+                dl: "d/" + uuid + "/download.zip"
+            });
+        })
+        
+    });
 })
 
 app.post('/recrush', function (req, res) {
-    let uuid = req.param.uuid
-    let original = req.param.fileName
-    const filePath = original
+    let oldUUID = req.body.uuid
+    let uuid = getUUID()
+    let settings = JSON.parse(req.body.settings)
+    let original = fs.readFileSync(outPath + oldUUID + "/filename", "utf8")
+    const filePath = outPath + uuid + "/source" + path.extname(original) 
+    fs.copyFileSync(outPath + oldUUID + "/source" + path.extname(original) , filePath)
 
-    // THIS NO WORK
+    fs.writeFileSync(outPath + uuid + "/filename", original)
+
     // Send off to a thread
     processFile(uuid, original, filePath, outPath, settings).then((result) => {
         // Respond with crushed image and preview thumbnail
         result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
         result.preview = 'd/' + result.uuid + '/preview/' + 'min.preview.jpg'
+        result.original = 'd/' + result.uuid + '/source' + path.extname(original)
         res.json(result);
     })
     

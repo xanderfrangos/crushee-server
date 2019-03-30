@@ -53,17 +53,18 @@ const noEngine = { engine: false, command: false }
 //
 */
 
-
+var debug = false;
 //
 //   Manipulate images
 //
 async function processImage(file, outFolder, options = {}) {
     const settings = Object.assign(imgSettings, options)
     let ext = path.extname(file).toLowerCase()
-    
-    sendGenericMessage(JSON.stringify(settings))
+
     try {
-        let image = sharp(file)
+        let image = sharp(file, {
+            density: 300
+        })
         if(settings.resize.width || settings.resize.height) {
             image.resize(
                 (settings.resize.width ? parseInt(settings.resize.width) : null), 
@@ -81,10 +82,24 @@ async function processImage(file, outFolder, options = {}) {
         }
         
         if (ext === ".jpg" || ext === ".jpeg") {
-            image.jpeg({
-                quality: 100,
-                chromaSubsampling: '4:4:4'
+            image.flatten({
+                background: {r:255, g:255, b:255}
             })
+            if(settings.jpg.quality >= 99) {
+                image.jpeg({
+                    quality: 100,
+                    chromaSubsampling: '4:4:4'
+                })
+            } else {
+                image.jpeg({
+                    quality: 100,
+                    chromaSubsampling: '4:4:4',
+                    optimiseCoding: true,
+                    overshootDeringing: true,
+                    trellisQuantisation: true
+                })
+            }
+            
         } else if (ext === ".png") {
             image.png()
         } else if(ext === ".webp") {
@@ -112,7 +127,7 @@ async function processImage(file, outFolder, options = {}) {
 //
 //    Compress images after manipulation
 //
-async function compressFile(file, outFolder, options = {}) {
+async function compressFile(file, outFolder, options = {}, jpgEngineName = "jpegRecompress") {
     const settings = Object.assign(imgSettings, options)
 
     const inExt = path.extname(file).toLowerCase()
@@ -124,6 +139,14 @@ async function compressFile(file, outFolder, options = {}) {
 
     jpgOptions = Object.assign(jpgEngine)
     jpgOptions.command[1] = settings.jpg.quality + ""
+
+    jpgOptions.engine = "jpegRecompress"
+    jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + ""]
+
+    if(jpgEngineName == "mozjpeg") {
+        jpgOptions.engine = "mozjpeg"
+        jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize"]
+    }
 
     pngOptions = Object.assign(pngEngine)
     if(settings.png.qualityMin > settings.png.qualityMax)
@@ -186,8 +209,17 @@ async function makePreview(file, outFolder) {
 //
 async function job(uuid, fn, f, o, options = {}) {
 
+    debug = (options.app.darkMode == "true" ? true : false)
+
     let uuidDir = o + uuid + "/"
 
+    sendGenericMessage("Clearing old files...")
+    // Delete old files if recrushing
+    del.sync(uuidDir + "ts")
+    deleteFolderRecursive(uuidDir + "preview/")
+    deleteFolderRecursive(uuidDir + "crushed/")
+
+    sendGenericMessage("Manipulating...")
     // Convert with Sharp
     let resized = await processImage(f, uuidDir, options)
     if (!resized) {
@@ -195,22 +227,36 @@ async function job(uuid, fn, f, o, options = {}) {
         resized = f;
     }
 
+    let tmpResize
+    if(parseInt(options.jpg.quality) < 99) {
+        sendGenericMessage("MozCompressing...")
+        resized = await compressFile(resized, uuidDir, options, "mozjpeg")
+        if (!resized) {
+            consoleLog("Failed mozcompress! Returning original file :(")
+            resized = tmpResize;
+        }
+    }
+    debug = false
+
+    sendGenericMessage("Compressing...")
     // Compress
     let compressed = await compressFile(resized, uuidDir, options)
     if (!compressed) {
         consoleLog("Failed compress! Returning original file :(")
-        compressed = f;
+        compressed = resized;
     }
 
     // Collect sizes to send back
     let sourceSize = fs.statSync(f).size
     let finalSize = fs.statSync(compressed).size
 
+    sendGenericMessage("Preparing final file...")
     // Copy finished file to final location
     fs.mkdirSync(uuidDir + "crushed/")
     let finalFile = uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(compressed)
 
-    if(sourceSize < finalSize) {
+    if(sourceSize < finalSize && path.extname(fn).toLowerCase() == path.extname(compressed).toLowerCase()) {
+        sendGenericMessage("WARNING: New file is larger. Returning original...")
         fs.copyFileSync(f, uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(fn))
         finalSize = sourceSize;
     } else {
@@ -218,19 +264,27 @@ async function job(uuid, fn, f, o, options = {}) {
     }
 
     
-
+    sendGenericMessage("Making previews...")
     // Make thumbnails
     fs.mkdirSync(uuidDir + "preview/")
-    let preview = await makePreview(finalFile, uuidDir + "preview/")
-    let minPreview = await compressFile(preview, uuidDir + "preview/")
+    let preview = ""
+    try {
+        preview = await makePreview(finalFile, uuidDir + "preview/")
+        preview = await compressFile(preview, uuidDir + "preview/")
+    } catch(e) {
 
+    }
+
+
+    sendGenericMessage("Writing timestamp...")
     // Write timestamp for cleanup
     fs.writeFileSync(uuidDir + "ts", Date.now())
 
+    sendGenericMessage("Clearing temp files...")
     // Get rid of unnecessary files
     try {
-        //del(resized)
-        del(compressed)
+        await del(resized)
+        await del(compressed)
     } catch (e) {
         consoleLog(e)
     }
@@ -241,9 +295,10 @@ async function job(uuid, fn, f, o, options = {}) {
         filename: path.basename(finalFile, path.extname(finalFile)) + path.extname(finalFile),
         sourcesize: sourceSize,
         finalsize: finalSize,
-        preview: minPreview
+        preview: preview
     }
 
+    sendGenericMessage("Done!")
     // Congrats, job well done!
     return result
 }
@@ -338,3 +393,26 @@ async function checkCanDoJob() {
         })
     }
 }
+
+
+
+
+
+
+
+
+
+
+var deleteFolderRecursive = function(path) {
+    if (fs.existsSync(path)) {
+      fs.readdirSync(path).forEach(function(file, index){
+        var curPath = path + "/" + file;
+        if (fs.lstatSync(curPath).isDirectory()) { // recurse
+          deleteFolderRecursive(curPath);
+        } else { // delete file
+          fs.unlinkSync(curPath);
+        }
+      });
+      fs.rmdirSync(path);
+    }
+  };

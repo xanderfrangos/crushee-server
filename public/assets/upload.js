@@ -66,7 +66,7 @@ Upload.prototype.progressHandling = function (event) {
     event.target.file.elem.find('div.progress-bar').css("width", percent + "%");
 
     if (percent == 100) {
-        event.target.file.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
+        event.target.file.setStatus("crushing")
     }
 
 };
@@ -123,6 +123,7 @@ function UploadedFileCallback(data, file) {
     file.uuid = data.uuid
     file.url = data.dl
     file.preview = data.preview
+    file.originalURL = data.original
     file.name = data.filename
 
     file.setFilename(file.name)
@@ -175,6 +176,8 @@ function setStatus(inStatus) {
         updateTotals()
     } else if(status === "error") {
         this.elem.find('.details .subtitle').html(`<span class="bold error">Error: Could not process this file</span>`)
+    } else if(status === "crushing") {
+        this.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
     }
 }
 
@@ -228,6 +231,7 @@ var files = {
         var file = {
             id: this.getID(),
             name: data.name || 'Unknown file',
+            originalName: data.name || 'Unknown file',
             status: 'uploading',
             startSize: 0,
             endSize: 0,
@@ -236,6 +240,7 @@ var files = {
             bind: function () { 
                 this.elem = $(".elem--file[data-id='" + this.id + "']") 
                 this.elem.find('.actions .save-button').click(actionSaveButton)
+                this.elem.find('.preview').click(showComparison)
             },
             elem: false
         }
@@ -304,13 +309,27 @@ function createNewFileHTML(file) {
 
 
 
+function showComparison(e) {
+    var file = files.list[$(this).parent().parent().attr("data-id")]
+    if(file.status != "done")
+        return false;
+
+    $(".page--comparison").addClass("show");
+
+    $(".page--comparison .before").css("background-image", `url('${file.originalURL}')`);
+    $(".page--comparison .after").css("background-image", `url('${file.url}')`);
+}
 
 
 
+$(".page--comparison").click(function() {
+    $(this).removeClass("show")
+})
 
-
-
-
+var beforeElem = $(".page--comparison .before")
+$(".page--comparison").mousemove(function(e) {
+    beforeElem.width(e.pageX)
+})
 
 
 
@@ -447,4 +466,115 @@ $("[data-linked]").each(function() {
 
 function toggleDarkMode(elem) {
     $("body").attr("data-theme", ($(elem).attr("data-value") == "true" ? "dark" : "light"))
+}
+
+
+
+
+
+
+
+
+
+$(".action--download-all").click(function(){
+    var that = this;
+    var formData = new FormData();
+    var filesList = [];
+    
+    for(var i = 0; i < files.list.length; i++) {
+        if(files.list[i].status == "done") {
+            filesList.push({
+                name: files.list[i].name,
+                uuid: files.list[i].uuid
+            });
+        }
+    }
+
+    console.log(JSON.stringify(filesList))
+    formData.append("files", JSON.stringify(filesList))
+
+    $.ajax({
+        type: "POST",
+        url: "/zip",
+        xhr: function () {
+            var myXhr = $.ajaxSettings.xhr();
+            //myXhr.upload.file = file;
+            //myXhr.upload.callback = that.callback;
+            //myXhr.upload.upload = that;
+            if (myXhr.upload) {
+                //myXhr.upload.addEventListener('progress', that.progressHandling, false);
+            }
+            return myXhr;
+        },
+        success: function (data) {
+            console.log(data)
+            window.location = data.dl
+        },
+        error: function (error) {
+            console.log(error)
+        },
+        async: true,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        timeout: 60000
+    });
+});
+
+
+
+$(".action--recompress").click(function(){
+    
+    for(var i = 0; i < files.list.length; i++) {
+        if(files.list[i].status == "done") {
+            recrush(files.list[i])
+        }
+    }
+    
+});
+
+
+
+
+
+
+
+
+function recrush(fileObj) {
+    var that = this;
+    var formData = new FormData();
+    formData.append("uuid", fileObj.uuid);
+    formData.append("settings", JSON.stringify(settings))
+
+
+    fileObj.setStatus("crushing")
+
+    $.ajax({
+        type: "POST",
+        url: "/recrush",
+        xhr: function () {
+            var myXhr = $.ajaxSettings.xhr();
+            //myXhr.upload.file = file;
+            //myXhr.upload.callback = that.callback;
+            //myXhr.upload.upload = that;
+            if (myXhr.upload) {
+                //myXhr.upload.addEventListener('progress', that.progressHandling, false);
+            }
+            return myXhr;
+        },
+        success: function (data) {
+            console.log(data)
+            UploadedFileCallback(data, fileObj)
+        },
+        error: function (error) {
+            console.log(error)
+        },
+        async: true,
+        data: formData,
+        cache: false,
+        contentType: false,
+        processData: false,
+        timeout: 60000
+    });
 }
