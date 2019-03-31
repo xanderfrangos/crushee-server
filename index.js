@@ -8,19 +8,13 @@ const del = require('del')
 const uuidv1 = require('uuid/v1')
 const JSZip = require("jszip");
 
-const sharp = require("sharp")
-const compress_images = require("compress-images")
-
-
 const outPath = "public/out/"
 const tmpPath = outPath + "tmp/"
-
-const isNode = process.argv[0].replace(/\.exe/g, '').endsWith('node')
 
 const app = express();
 
 // Limit extra threads
-let maxProcessingThreads = 1 || process.env.CRUSHEE_THREADS || os.cpus().length
+let maxProcessingThreads = process.env.CRUSHEE_THREADS || os.cpus().length
 let fileProcessorThreads = []
 
 /*
