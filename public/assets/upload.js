@@ -99,10 +99,12 @@ $("html").bind("drop", function (e) {
     e.stopPropagation();
 
     var files = e.originalEvent.dataTransfer.files;
+    console.log(files)
 
     for (var i = 0, file; file = files[i]; i++) {
+        console.log(file)
         var upload = new Upload(file, UploadedFileCallback);
-        var fileData = fileUploading(file.name)
+        var fileData = fileUploading(file)
         upload.doUpload(fileData);
     }
 
@@ -144,7 +146,7 @@ $("#file").on("change", function (e) {
 
     for (var i = 0, file; file = files[i]; i++) {
         var upload = new Upload(file, UploadedFileCallback);
-        var fileData = fileUploading(file.name)
+        var fileData = fileUploading(file)
         upload.doUpload(fileData);
     }
 
@@ -269,6 +271,7 @@ var files = {
             endSize: 0,
             setStatus: setStatus,
             setFilename: setFilename,
+            path: data.path || false,
             bind: function () { 
                 this.elem = $(".elem--file[data-id='" + this.id + "']") 
                 this.elem.find('.actions .save-button').click(actionSaveButton)
@@ -285,10 +288,11 @@ var files = {
     nextID: 0,
     getID: function () { return this.nextID++ }
 }
-function fileUploading(name) {
+function fileUploading(file) {
 
     var file = files.add({
-        name: name
+        name: file.name,
+        path: file.path || false
     })
 
 
@@ -676,16 +680,20 @@ function clearAllFiles() {
     $(".page--files").removeClass("show")
     updateTotals()
     showingList = false
+    showBackButton(false)
 }
 
 
 
 $(".action--display-settings").click(function(e) {
-    $("body").toggleClass("display-settings")
-    $(".sidebar").addClass("animate")
-
-    showBackButton($("body").hasClass("display-settings"))
-        
+    if($("body").hasClass("display-settings")) {
+        $("body").removeClass("display-settings")
+        showBackButton(false)
+    } else {
+        $("body").addClass("display-settings")
+        showBackButton(true)
+    }
+    $(".sidebar").addClass("animate") 
 })
 
 var backButtonDepth = 0
