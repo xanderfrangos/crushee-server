@@ -1,6 +1,7 @@
 const express = require("express")
 const fileUpload = require('express-fileupload');
 const fs = require("fs")
+const os = require("os")
 const path = require("path")
 const { fork } = require('child_process');
 const del = require('del')
@@ -14,7 +15,7 @@ const tmpPath = outPath + "tmp/"
 const app = express();
 
 // Limit extra threads
-let maxProcessingThreads = process.env.CRUSHEE_THREADS || 4
+let maxProcessingThreads = process.env.CRUSHEE_THREADS || os.cpus().length
 let fileProcessorThreads = []
 
 /*

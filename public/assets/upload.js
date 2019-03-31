@@ -644,7 +644,13 @@ $(".action--download-all").click(function(){
         },
         success: function (data) {
             console.log(data)
-            window.location = data.dl
+            if(settings.app.overwrite && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
+                for(var i = 0; i < files.list.length; i++) {
+                    downloadFile(files.list[i])
+                }
+            } else {
+                window.location = data.dl
+            }
         },
         error: function (error) {
             console.log(error)
@@ -657,6 +663,23 @@ $(".action--download-all").click(function(){
         timeout: 60000
     });
 });
+
+
+function downloadFile(file) {
+    if(file.status != "done") {
+        console.log("File not ready to be downloaded!")
+        return false
+    }
+    console.log(file)
+    console.log()
+    if(settings.app.overwrite == "true" && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
+        window.electron.download(window.location.origin + "/" + file.url, file.path, (cb) => {
+            console.log(cb)
+        })
+    } else {
+        window.location = file.url
+    }
+}
 
 
 
@@ -773,7 +796,7 @@ $(".page--menu-layer .bg").click(function(e) {
 })
 
 $(".elem--menu.single-file .download").click(function(e) {
-    window.location.href = files.list[files.menuItemID].url
+    downloadFile(files.list[files.menuItemID])
     $(".elem--menu").removeClass("active")
 })
 $(".elem--menu.single-file .recrush").click(function(e) {
