@@ -75,6 +75,38 @@
     z-index: 4;
     background: var(--base-bg-alt);
 
+    @include mobile {
+        padding: 0;
+
+        .button {
+            border-radius: 0;
+            margin: 0;
+            box-shadow: none;
+            padding: 10px 16px;
+            flex-wrap: wrap;
+    
+            &.big {
+                font-size: 18px;
+            }
+    
+            .icon {
+                width: 100%;
+                margin-top: 7px;
+            }
+            .text {
+                font-size: 10px;
+                margin-top: 11px;
+                display: block;
+            }
+            span {
+                & + span {
+                    margin: 0;
+                }
+            }
+        }
+
+    }
+
     & > .inner {
         display: flex;
         flex-direction: row;
@@ -82,6 +114,9 @@
         max-width: 700px;
         margin: auto;
     }
+
+    
+
 
 
 

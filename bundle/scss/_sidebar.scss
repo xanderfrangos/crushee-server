@@ -31,12 +31,23 @@
     background: var(--sidebar-bg);
 
     @include appnav {
-        top: auto;
-        bottom: 0;
-        height: 40px;
+        top: 0px;
+        bottom: 0px;
+        height: 100%;
         width: 100%;
-        box-shadow: 0 4px 15px #19191f;
-        display: none;
+        box-shadow: none;
+        transform: translateX(100%);
+
+        & > .inner {
+            max-width: 420px;
+            margin: 56px auto;
+        }
+
+        &.animate {
+            //transition: transform 0.5s;
+        }
+
+
     }
 
     & > .inner {
@@ -337,7 +348,13 @@
 
 
 
-
+@include appnav {
+    body.display-settings {
+        .sidebar {
+            transform: translateX(0%);
+        }
+    }
+}
 
 
 

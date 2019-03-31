@@ -291,6 +291,8 @@ function fileUploading(name) {
         name: name
     })
 
+
+    showBackButton(true)
     createNewFileHTML(file)
     return file
 }
@@ -678,8 +680,38 @@ function clearAllFiles() {
 
 
 
+$(".action--display-settings").click(function(e) {
+    $("body").toggleClass("display-settings")
+    $(".sidebar").addClass("animate")
+
+    showBackButton($("body").hasClass("display-settings"))
+        
+})
+
+var backButtonDepth = 0
+function showBackButton(show) {
+    if(show) {
+        backButtonDepth++
+        $("body").addClass("show-back-button")
+        $(".elem--mobile-nav .back-button").addClass("animate")
+    } else {
+        backButtonDepth--
+        if(backButtonDepth == 0)
+            $("body").removeClass("show-back-button")
+    }
+}
 
 
+
+$(".action--back-button").click(function(e) {
+    if($("body").hasClass("display-settings")) {
+        $("body").removeClass("display-settings")
+        showBackButton(false)
+    } else if($(".page--files").hasClass("show")) {
+        clearAllFiles()
+        showBackButton(false)
+    }
+})
 
 function recrush(fileObj) {
     var that = this;
