@@ -415,7 +415,15 @@ async function checkCanDoJob() {
 }
 
 
+setInterval(sendStillAliveMessage, 1000)
 
+function sendStillAliveMessage() {
+    process.send({
+        type: 'alive',
+        message: "Thread active",
+        threadNum: threadNum
+    })
+}
 
 
 

@@ -3,19 +3,24 @@ const fileUpload = require('express-fileupload');
 const fs = require("fs")
 const os = require("os")
 const path = require("path")
-const { fork } = require('child_process');
+const { fork, spawn } = require('child_process');
 const del = require('del')
 const uuidv1 = require('uuid/v1')
 const JSZip = require("jszip");
+
+const sharp = require("sharp")
+const compress_images = require("compress-images")
 
 
 const outPath = "public/out/"
 const tmpPath = outPath + "tmp/"
 
+const isNode = process.argv[0].replace(/\.exe/g, '').endsWith('node')
+
 const app = express();
 
 // Limit extra threads
-let maxProcessingThreads = process.env.CRUSHEE_THREADS || os.cpus().length
+let maxProcessingThreads = 1 || process.env.CRUSHEE_THREADS || os.cpus().length
 let fileProcessorThreads = []
 
 /*
@@ -52,14 +57,22 @@ cleanUp()
 
 // Set up processing threads
 for (let i = 0; i < maxProcessingThreads; i++) {
+    const forked = makeThread(i)
+    fileProcessorThreads.push(forked)
+}
+
+function makeThread(threadNum) {
+    let thread = fork('./manipulate-file.js', [], { silent: false }) 
+
     const forked = {
         queue: 0,
-        threadNum: i,
-        thread: fork('manipulate-file.js', [], { silent: false })
+        threadNum,
+        thread,
+        lastAlive: Date.now()
     }
     forked.thread.send({
         type: 'setThreadNum',
-        result: i
+        result: threadNum
     })
 
     // Handle messages and queue updates
@@ -68,12 +81,30 @@ for (let i = 0; i < maxProcessingThreads; i++) {
             fileProcessorThreads[data.threadNum].queue = data.result
         } else if (data.type === "generic") {
             console.log(`Thread ${data.threadNum} says "${data.message}"`)
+        } else if(data.type === "alive") {
+            forked.lastAlive = Date.now()
         }
 
     })
 
-    fileProcessorThreads.push(forked)
+    return forked
 }
+
+
+// Monitor and restart unresponsive threads
+setInterval(monitorThreads, 3000)
+function monitorThreads() {
+    fileProcessorThreads.forEach((fork, idx) => {
+        const now = Date.now()
+        //console.log(`Thread ${idx} last alive ${(now - fork.lastAlive) / 1000}s ago`)
+        if(fork.lastAlive < now - (1000 * 10)) {
+            console.log(`Thread ${idx} responsive. Restarting thread.`)
+            fork.thread.kill()
+            fileProcessorThreads[idx] = makeThread(idx)
+        }
+    })
+}
+
 
 // Print queues to console
 printQueues = () => {
