@@ -29,6 +29,7 @@
         line-height: 1;
         font-weight: bold;
         background: white;
+        color: black;
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -38,7 +39,7 @@
         }
 
         svg {
-            fill: var(--text-base);
+            fill: black;
             margin: -5px 0;
             display: block
         }
