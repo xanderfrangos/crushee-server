@@ -187,6 +187,17 @@ function setStatus(inStatus) {
         this.elem.find('.details .subtitle').html(`<span class="bold error">Error: Could not process this file</span>`)
     } else if(status === "crushing") {
         this.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
+    } else if(status === "deleted") {
+        var foundDeleted = false
+        for(var i = 0; i < files.list.length; i++) {
+            if(files.list[i].status != "deleted") {
+                foundDeleted = true
+                break
+            }
+        }
+        if(!foundDeleted) {
+            clearAllFiles()
+        }
     }
 }
 
@@ -206,6 +217,8 @@ function getFormattedSize(size) {
 }
 
 function getFormattedPercent(start, end) {
+    if(start == 0 || end == 0)
+    return "0%"
     if(start < end) {
         return ((100 + ((end / start) * 100)).toFixed(0) + "% larger")
     } else {
@@ -230,8 +243,18 @@ function updateTotals() {
 
 
 function actionSaveButton(e) {
-    console.log('saction')
     window.location.href = files.list[$(this).attr('data-id')].url
+}
+
+function actionMoreButton(e) {
+    var pos = $(this).position()
+    var menu = $(".elem--menu.single-file")
+
+    files.menuItemID = parseInt($(this).attr("data-id"))
+
+    menu.css("top", (pos.top - 5) + "px")
+    menu.css("left", (pos.left - menu.width() + $(this).width()) + "px")
+    menu.toggleClass("active")
 }
 
 
@@ -249,9 +272,11 @@ var files = {
             bind: function () { 
                 this.elem = $(".elem--file[data-id='" + this.id + "']") 
                 this.elem.find('.actions .save-button').click(actionSaveButton)
+                this.elem.find('.actions .more-button').click(actionMoreButton)
                 this.elem.find('.preview').click(showComparison)
             },
-            elem: false
+            elem: false,
+            menuItemID: -1
         }
         this.list.push(file)
         return file
@@ -286,6 +311,9 @@ function createNewFileHTML(file) {
                             <div class="inner">
                                 <div class="overlay">
                                     <div class="progress-bar"></div>
+                                    <div class="compare-hover">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M10 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h5v2h2V1h-2v2zm0 15H5l5-6v6zm9-15h-5v2h5v13l-5-6v9h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                                    </div>
                                 </div>
                                 <img src="assets/unknown.svg" />
                             </div>
@@ -298,12 +326,8 @@ function createNewFileHTML(file) {
                         </div>
 
                         <div class="actions">
-                            <div class="save-button" data-id="${file.id}">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
-                                    <path fill="none" d="M0 0h24v24H0V0z" />
-                                    <path
-                                        d="M16.59 9H15V4c0-.55-.45-1-1-1h-4c-.55 0-1 .45-1 1v5H7.41c-.89 0-1.34 1.08-.71 1.71l4.59 4.59c.39.39 1.02.39 1.41 0l4.59-4.59c.63-.63.19-1.71-.7-1.71zM5 19c0 .55.45 1 1 1h12c.55 0 1-.45 1-1s-.45-1-1-1H6c-.55 0-1 .45-1 1z" />
-                                </svg>
+                            <div class="more-button" data-id="${file.id}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
                             </div>
                         </div>
 
@@ -641,6 +665,16 @@ $(".action--recompress").click(function(){
 });
 
 
+$(".action--clear-all").click(clearAllFiles);
+
+function clearAllFiles() {
+    files.nextID = 0
+    files.list = []
+    $(".page--files--list").html("")
+    $(".page--files").removeClass("show")
+    updateTotals()
+    showingList = false
+}
 
 
 
@@ -684,3 +718,30 @@ function recrush(fileObj) {
         timeout: 60000
     });
 }
+
+
+
+
+
+
+
+
+var menuItemID = -1;
+
+$(".page--menu-layer .bg").click(function(e) {
+    $(".elem--menu").removeClass("active")
+})
+
+$(".elem--menu.single-file .download").click(function(e) {
+    window.location.href = files.list[files.menuItemID].url
+    $(".elem--menu").removeClass("active")
+})
+$(".elem--menu.single-file .recrush").click(function(e) {
+    recrush(files.list[files.menuItemID])
+    $(".elem--menu").removeClass("active")
+})
+$(".elem--menu.single-file .remove").click(function(e) {
+    $(".elem--file[data-id='" + files.menuItemID + "'").remove()
+    files.list[files.menuItemID].setStatus("deleted")
+    $(".elem--menu").removeClass("active")
+})

@@ -25,18 +25,21 @@
         @include elem--file--mode-small();
     }
     
-    
 }
 
 .page--files--after-list {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    border-top: 1px solid var(--base-bg-alt);
 
     & > * {
         font-size: 13px;
         font-weight: 700;
         padding: 20px;
+        @include appnav {
+            padding: 15px;
+        }
     }
 
     .totals {

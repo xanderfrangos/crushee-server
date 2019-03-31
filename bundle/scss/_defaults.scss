@@ -13,6 +13,7 @@ html, body {
     color: var(--text-base);
     line-height: 1;
     background: var(--base-bg);
+    user-select: none;
     
     @include appnav {
         font-size: 15px;
