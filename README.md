@@ -10,11 +10,11 @@ Crushee was primarily built with [Node.js](https://nodejs.org/), [Express](https
 
 ## Desktop App
 
-For the average user, It's recommended that you use the [desktop app](https://github.com/xanderfrangos/crushee-desktop) (available for MacOS and Windows) instead of the server. The app has all of the capabilities of the server, but without needing to run a Node server and remember URLs.
+For the average user, It's recommended that you use the [desktop app](https://github.com/xanderfrangos/crushee) (available for MacOS and Windows) instead of the server. The app has all of the capabilities of the server, but without needing to run a Node server and remember URLs.
 
 **Download Crushee for Desktop here:**
 
-<https://github.com/xanderfrangos/crushee-desktop/releases>
+<https://github.com/xanderfrangos/crushee/releases>
 
 
 
