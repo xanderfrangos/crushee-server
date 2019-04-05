@@ -1,4 +1,7 @@
-# Crushee
+<p align="center">
+  <img src="https://crushee.app/assets/img/icon.svg">
+</p>
+<h1 align="center">Crushee Server</h1>
 
 *An image squisher*
 
