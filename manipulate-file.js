@@ -79,6 +79,19 @@ async function processImage(file, outFolder, options = {}, quality = 100) {
         let image = sharp(file, {
             density: 300
         })
+
+        let metadata = await image.metadata()
+        sendGenericMessage("Detected format:" + metadata.format)
+
+        switch(metadata.format) {
+            case "jpeg":
+                ext = ".jpg"
+                break
+            default:
+                ext = metadata.format
+                break;
+        }
+
         if(settings.resize.width || settings.resize.height) {
             image.resize(
                 (settings.resize.width && parseInt(settings.resize.width) > 0 ? parseInt(settings.resize.width) : null), 
