@@ -204,14 +204,15 @@ function setStatus(inStatus) {
 }
 
 function getFormattedSize(size) {
-    outSize = size;
-    if (size < 1000) {
+    let absSize = Math.abs(size);
+    let outSize = size;
+    if (absSize < 1000) {
         // bytes
         outSize = size + " bytes"
-    } else if (size < 1000 * 1000) {
+    } else if (absSize < 1000 * 1000) {
         // KB
         outSize = (size / 1000).toFixed(1) + "KB"
-    } else if (size < 1000 * 1000 * 1000) {
+    } else if (absSize < 1000 * 1000 * 1000) {
         // MB
         outSize = (size / (1000 * 1000)).toFixed(1) + "MB"
     }
@@ -531,8 +532,8 @@ const qualityPresets = [
     {
         jpg: {
             quality: 94,
-            subsampling: 1,
-            useOriginal: true
+            subsampling: 2,
+            useOriginal: false
         },
         png: {
             qualityMin: 15,
@@ -547,7 +548,7 @@ const qualityPresets = [
         jpg: {
             quality: 95,
             subsampling: 1,
-            useOriginal: true
+            useOriginal: false
         },
         png: {
             qualityMin: 25,
@@ -682,9 +683,8 @@ function downloadFile(file) {
         return false
     }
     console.log(file)
-    console.log()
     if(settings.app.overwrite == "true" && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
-        window.electron.download(window.location.origin + "/" + file.url, file.path, (cb) => {
+        window.electron.download(window.location.origin + "/" + file.url, file.path, file.name, (cb) => {
             console.log(cb)
         })
     } else {

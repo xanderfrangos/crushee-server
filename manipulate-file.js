@@ -157,9 +157,9 @@ async function compressFile(file, outFolder, options = {}, jpgEngineName = "jpeg
     } else {
         jpgOptions.engine = "jpegRecompress"
         if(parseInt(settings.jpg.subsampling) <= 1) {
-            jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + "", "--subsample", "disable"]
+            jpgOptions.command = ["--quality", "high", "--min", (parseInt(settings.jpg.quality) * 0.8) + "", "--subsample", "disable"]
         } else {
-            jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + "", "--method", "smallfry"]
+            jpgOptions.command = ["--quality", "high", "--min", (parseInt(settings.jpg.quality) * 0.8) + "", "--method", "smallfry"]
         }
     }
 
@@ -236,19 +236,27 @@ async function job(uuid, fn, f, o, options = {}) {
         resized = f;
     }
 
-    if(path.extname(resized) == path.extname(f) && path.extname(resized) == ".jpg" && parseBool(options.jpg.useOriginal)) {
+    // Determine if the original file is OK to use as-is. Must have been a JPEG and hasn't been resized.
+    let canUseOriginalImage = (parseBool(options.jpg.useOriginal) && path.extname(resized) == path.extname(f) && path.extname(resized) == ".jpg" && !(options.resize.width || options.resize.height) ? true : false)
+
+    // Use original file if wanted/able.
+    if(parseBool(options.jpg.useOriginal) && canUseOriginalImage) {
         sendGenericMessage("User requested to use original image.")
         resized = f;
     }
 
     // Use MozJPEG to adjust overall quality
+    // We'll use this on JPEGs that have been processed by sharp
     let tmpResize
-    if(path.extname(resized) == ".jpg" && !parseBool(options.jpg.useOriginal)) {
+    let processedOriginal = false
+    if(path.extname(resized) == ".jpg" && !(parseBool(options.jpg.useOriginal) && canUseOriginalImage)) {
         sendGenericMessage("MozCompressing...")
         resized = await compressFile(resized, uuidDir, options, "mozjpeg")
         if (!resized) {
             consoleLog("Failed mozcompress! Returning original file :(")
             resized = tmpResize;
+        } else {
+            processedOriginal = true
         }
     }
     debug = false
@@ -260,6 +268,26 @@ async function job(uuid, fn, f, o, options = {}) {
         consoleLog("Failed compress! Returning original file :(")
         compressed = resized;
     }
+
+
+    // If we previously manipulated the file with sharp, compress original too, for comparison
+    if(processedOriginal) {
+        
+        sendGenericMessage("Compressing original...")
+        let compressedOriginal = await compressFile(f, uuidDir, options)
+        if (!compressedOriginal) {
+            consoleLog("Failed compressing original! Returning original file :(")
+            compressedOriginal = f
+        } 
+
+        if(fs.statSync(compressedOriginal).size <= fs.statSync(compressed).size) {
+            sendGenericMessage("Compressed original is smaller than compressed processed. Using compressed original...")
+            compressed = compressedOriginal
+        }
+
+    }
+    
+
 
     // Collect sizes to send back
     let sourceSize = fs.statSync(f).size
