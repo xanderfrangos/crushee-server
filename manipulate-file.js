@@ -265,14 +265,7 @@ async function job(uuid, fn, f, o, options = {}) {
     fs.mkdirSync(uuidDir + "crushed/")
     let finalFile = uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(compressed)
 
-    if(false && sourceSize < finalSize && path.extname(fn).toLowerCase() == path.extname(compressed).toLowerCase()) {
-        sendGenericMessage("WARNING: New file is larger. Returning original...")
-        fs.copyFileSync(f, uuidDir + "crushed/" + path.basename(fn, path.extname(fn)) + path.extname(fn))
-        finalSize = sourceSize;
-    } else {
-        fs.copyFileSync(compressed, finalFile)
-    }
-
+    fs.copyFileSync(compressed, finalFile)
     
     sendGenericMessage("Making previews...")
     // Make thumbnails
