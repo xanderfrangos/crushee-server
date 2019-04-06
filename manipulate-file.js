@@ -212,9 +212,12 @@ async function makePreview(file, outFolder) {
     try {
         let image = sharp(file)
         image.resize(200, 200, { fit: "cover" })
+        image.flatten({
+            background: {r:255, g:255, b:255}
+        })
         image.jpeg({
-            quality: 75,
-            chromaSubsampling: '4:2:0'
+            quality: 95,
+            chromaSubsampling: '4:4:4'
         })
         let promise = image.toFile(outPath)
             .then(() => {
@@ -318,7 +321,7 @@ async function job(uuid, fn, f, o, options = {}) {
     fs.mkdirSync(uuidDir + "preview/")
     let preview = ""
     try {
-        preview = await makePreview(finalFile, uuidDir + "preview/", {})
+        preview = await makePreview(finalFile, uuidDir + "preview/")
     } catch(e) {
         sendGenericMessage("ERROR: Creating preview failed")
     }
@@ -328,7 +331,8 @@ async function job(uuid, fn, f, o, options = {}) {
         const compressedP = await compressFile(preview, uuidDir + "preview/", {
             jpg: {
                 quality: 75,
-                subsampling: 2
+                subsampling: 2,
+                make: true
             }
         }, "mozjpeg")
         preview = compressedP
