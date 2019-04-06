@@ -443,11 +443,15 @@ function changePreset(elem) {
     }
 }
 
+var loadingPreset = false;
 function loadPreset(idx) {
+    if(loadingPreset) return false;
     settings.jpg = Object.assign(settings.jpg, qualityPresets[idx].jpg)
     settings.png = Object.assign(settings.png, qualityPresets[idx].png)
     settings.webp = Object.assign(settings.webp, qualityPresets[idx].webp)
+    loadingPreset = true
     readAllInputSources()
+    loadingPreset = false
 }
 
 

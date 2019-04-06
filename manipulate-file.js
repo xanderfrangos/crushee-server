@@ -87,11 +87,11 @@ async function processImage(file, outFolder, options = {}, quality = 100) {
                 )
         }
 
-        if(options.jpg.make == "true") {
+        if(parseBool(options.jpg.make)) {
             ext = ".jpg"
         }
 
-        if(options.webp.make == "true") {
+        if(parseBool(options.webp.make)) {
             ext = ".webp"
         }
         
@@ -248,15 +248,15 @@ async function job(uuid, fn, f, o, options = {}) {
     // Use MozJPEG to adjust overall quality
     // We'll use this on JPEGs that have been processed by sharp
     let tmpResize
-    let processedOriginal = false
+    let tryCompressingOriginal = false
     if(path.extname(resized) == ".jpg" && !(parseBool(options.jpg.useOriginal) && canUseOriginalImage)) {
         sendGenericMessage("MozCompressing...")
         resized = await compressFile(resized, uuidDir, options, "mozjpeg")
         if (!resized) {
             consoleLog("Failed mozcompress! Returning original file :(")
             resized = tmpResize;
-        } else {
-            processedOriginal = true
+        } else if(canUseOriginalImage) {
+            tryCompressingOriginal = true
         }
     }
     debug = false
@@ -271,7 +271,7 @@ async function job(uuid, fn, f, o, options = {}) {
 
 
     // If we previously manipulated the file with sharp, compress original too, for comparison
-    if(processedOriginal) {
+    if(tryCompressingOriginal) {
         
         sendGenericMessage("Compressing original...")
         let compressedOriginal = await compressFile(f, uuidDir, options)
