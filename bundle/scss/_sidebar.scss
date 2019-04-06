@@ -129,6 +129,14 @@
                 display: none;
             }
         }
+        .app-only {
+            display: none;
+            @at-root {
+                body.is-app .app-only {
+                    display: flex;
+                }
+            }
+        }
 }
 
 .sidebar--header {
