@@ -13,6 +13,8 @@ const tmpPath = outPath + "tmp/"
 
 const app = express();
 
+let jobQueue = []
+
 // Limit extra threads
 let maxProcessingThreads = process.env.CRUSHEE_THREADS || os.cpus().length
 let fileProcessorThreads = []
@@ -62,6 +64,7 @@ function makeThread(threadNum) {
         queue: 0,
         threadNum,
         thread,
+        jobs: [],
         lastAlive: Date.now()
     }
     forked.thread.send({
@@ -77,6 +80,29 @@ function makeThread(threadNum) {
             console.log(`Thread ${data.threadNum} says "${data.message}"`)
         } else if(data.type === "alive") {
             forked.lastAlive = Date.now()
+        } else if(data.type === "jobRequest") {
+
+            if(jobQueue.length > 0) {
+                // Get job from queue
+                let job = jobQueue.splice(0, 1)[0]
+                forked.jobs[job.uuid] = job
+
+                // Send job to thread
+                forked.thread.send({
+                    type: 'job',
+                    uuid: job.uuid,
+                    payload: job.payload
+                }, (e) => {
+                    if (e) {
+                        console.log(e)
+                    }
+                })
+            }
+
+        } else if(data.type === "finished") {
+            // Return response from server
+            forked.jobs[data.uuid].callback(data.result)
+            delete forked.jobs[data.uuid];
         }
 
     })
@@ -136,27 +162,16 @@ function getAvailableThread() {
 
 async function processFile(uuid, uploadName, inFile, outDir, options = {}) {
 
-    // Get thread with least jobs
-    const forked = getAvailableThread()
-
-    // Send job to thread
-    forked.send({
-        type: 'job',
-        uuid: uuid,
-        payload: [uuid, uploadName, inFile, outDir, options]
-    }, (e) => {
-        if (e) {
-            console.log(e)
-        }
-    })
 
     // Wait for response from thread
     return new Promise((resolve, reject) => {
-        forked.on('message', (data) => {
-            if (data.type == "finished" && data.uuid == uuid) {
-                resolve(data.result)
-            }
+
+        jobQueue.push({
+            uuid,
+            payload: [uuid, uploadName, inFile, outDir, options],
+            callback: resolve
         })
+
     }).then((result) => {
         // We did it!
         return result
@@ -167,7 +182,6 @@ async function processFile(uuid, uploadName, inFile, outDir, options = {}) {
     })
 
 }
-
 
 getUUID = () => {
         // Make UUID

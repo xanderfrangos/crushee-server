@@ -367,11 +367,20 @@ function sendGenericMessage(message) {
 }
 
 // Try to run a job, if able
-setInterval(checkCanDoJob, 333)
+setInterval(checkCanDoJob, 100)
 async function checkCanDoJob() {
-    if (processBusy == false && processQueue.length > 0) {
+    if (processBusy == false) {
 
-        processBusy = true
+        if(processQueue.length === 0) {
+            // No jobs, request another
+
+            process.send({
+                type: 'jobRequest',
+                threadNum: threadNum
+            })
+
+        } else {
+            processBusy = true
         let data = processQueue[0]
         job(...data.payload).then((result) => {
 
@@ -411,6 +420,8 @@ async function checkCanDoJob() {
             // Try next job
             checkCanDoJob()
         })
+        }
+        
     }
 }
 
