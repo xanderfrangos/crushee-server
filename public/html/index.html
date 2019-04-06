@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>Crushee - An image squisher</title>
+    <title>Crushee</title>
     <script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#EB358A">
@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,400i,600,600i,700,700i,800,900"
         rel="stylesheet">
     <link href="assets/style.css" rel="stylesheet">
+    <link rel="shortcut icon" href="assets/icon-shadow.ico">
 </head>
 
 <body>
@@ -219,6 +220,22 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col">
+                        <label>Advanced Options</label>
+                    </div>
+                    <div class="col">
+                        <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="app.advancedQuality"
+                            data-action="toggleAdvancedQuality">
+                            <div></div>
+                            <input type="hidden" name="app.advancedQuality" id="resizeCrop"
+                                data-linked="app.advancedQuality" />
+                        </div>
+                    </div>
+                </div>
+
+
                 <div class="group quality-advanced">
                     <div class="row">
                         <div class="col flex-1">
@@ -264,24 +281,37 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-
-
-
-                <div class="row">
-                    <div class="col">
-                        <label>Advanced Options</label>
+                    <div class="row">
+                        <div class="col flex-1">
+                            <label>Chroma Subsampling Level</label>
+                            <div class="sublabel">Covert to 4:2:0 chroma to reduce size without compressing.</div>
+                            <div class="input--range">
+                                <input type="range" min="1" max="4" name="jpg.subsampling" class="range"
+                                    data-linked="jpg.subsampling" />
+                                <input type="number" min="1" max="4" name="jpg.subsampling" class="val"
+                                    data-linked="jpg.subsampling" />
+                            </div>
+                        </div>
+                        
                     </div>
-                    <div class="col">
-                        <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="app.advancedQuality"
-                            data-action="toggleAdvancedQuality">
-                            <div></div>
-                            <input type="hidden" name="app.advancedQuality" id="resizeCrop"
-                                data-linked="app.advancedQuality" />
+                    <div class="row">
+                        <div class="col">
+                            <label>Prefer original JPEG</label>
+                            <div class="sublabel">Save file at lossless settings before processing. Disable for already optimized files.</div>
+                        </div>
+                        <div class="col">
+                            <div class="input--toggle" data-for="resizeCrop" tabindex="0" data-linked="jpg.useOriginal">
+                                <div></div>
+                                <input type="hidden" name="jpg.useOriginal" id="resizeCrop" data-linked="jpg.useOriginal" />
+                            </div>
                         </div>
                     </div>
                 </div>
+
+
+
+
+                
 
 
 

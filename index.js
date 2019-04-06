@@ -8,6 +8,9 @@ const del = require('del')
 const uuidv1 = require('uuid/v1')
 const JSZip = require("jszip");
 
+// Server version
+const serverVersion = require('./package.json').version
+
 const outPath = "public/out/"
 const tmpPath = outPath + "tmp/"
 
@@ -325,6 +328,6 @@ app.all('/health', (req, res) => {
 // Start listening
 const port = process.env.PORT || process.env.CRUSHEE_PORT || 1603
 app.listen(port, (e) => {
-    console.log(`Starting server on port ${port}`)
+    console.log(`Starting server v${serverVersion} on port ${port}`)
 })
 

@@ -16,7 +16,9 @@ let imgSettings = {
         crop: false
     },
     jpg: {
-        quality: 95
+        quality: 95,
+        subsampling: 1,
+        useOriginal: false
     },
     png: {
         qualityMin: 50,
@@ -43,6 +45,12 @@ const noEngine = { engine: false, command: false }
 
 
 
+
+
+parseBool = (value) => {
+    const str = String(value)
+    return (str.toLowerCase() === "true" || str.toLowerCase() === "yes" || str.toLowerCase() === "1" || value === 1 || value === true ? true : false)
+}
 
 
 /*
@@ -139,16 +147,16 @@ async function compressFile(file, outFolder, options = {}, jpgEngineName = "jpeg
 
     if(jpgEngineName == "mozjpeg") {
         jpgOptions.engine = "mozjpeg"
-        if(parseInt(settings.jpg.quality) >= 95) {
+        if(parseInt(settings.jpg.subsampling) <= 1) {
             sendGenericMessage("4:4:4 Chroma")
             jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize", "-sample", "1x1"]
         } else {
             sendGenericMessage("4:2:0 Chroma")
-            jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize"]
+            jpgOptions.command = ["-quality", settings.jpg.quality + "", "-optimize", "-sample", settings.jpg.subsampling + "x" + settings.jpg.subsampling]
         }
     } else {
         jpgOptions.engine = "jpegRecompress"
-        if(parseInt(settings.jpg.quality) >= 95) {
+        if(parseInt(settings.jpg.subsampling) <= 1) {
             jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + "", "--subsample", "disable"]
         } else {
             jpgOptions.command = ["--quality", "high", "--min", settings.jpg.quality + "", "--method", "smallfry"]
@@ -216,13 +224,6 @@ async function makePreview(file, outFolder) {
 //
 async function job(uuid, fn, f, o, options = {}) {
 
-
-    // JPEG Presets
-    // Max: 99
-    // High: 95
-    // Medium: 94
-    // Low: 88
-
     debug = (options.app.darkMode == "true" ? true : false)
 
     let uuidDir = o + uuid + "/"
@@ -235,10 +236,14 @@ async function job(uuid, fn, f, o, options = {}) {
         resized = f;
     }
 
+    if(path.extname(resized) == path.extname(f) && path.extname(resized) == ".jpg" && parseBool(options.jpg.useOriginal)) {
+        sendGenericMessage("User requested to use original image.")
+        resized = f;
+    }
 
     // Use MozJPEG to adjust overall quality
     let tmpResize
-    if(path.extname(resized) == ".jpg" && parseInt(options.jpg.quality) < 95) {
+    if(path.extname(resized) == ".jpg" && !parseBool(options.jpg.useOriginal)) {
         sendGenericMessage("MozCompressing...")
         resized = await compressFile(resized, uuidDir, options, "mozjpeg")
         if (!resized) {
@@ -281,7 +286,8 @@ async function job(uuid, fn, f, o, options = {}) {
     try {
         const compressedP = await compressFile(preview, uuidDir + "preview/", {
             jpg: {
-                quality: 75
+                quality: 75,
+                subsampling: 2
             }
         }, "mozjpeg")
         preview = compressedP

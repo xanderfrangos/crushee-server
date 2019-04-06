@@ -238,7 +238,7 @@ function updateTotals() {
         totalEnd += files.list[i].endSize
     }
 
-    var size = getFormattedSize(totalEnd)
+    var size = getFormattedSize(totalStart - totalEnd)
     var percent = getFormattedPercent(totalStart, totalEnd);
     $(".page--files--after-list .totals").html(`Total saved: ${size} &middot; <span>${percent}</span>`)
 }
@@ -452,11 +452,11 @@ function loadPreset(idx) {
 
 function toggleAdvancedQuality() {
     if(settings.app.advancedQuality == "false") {
-        $(".sidebar--section .quality-basic").removeClass("hide")
+        //$(".sidebar--section .quality-basic").removeClass("hide")
         $(".sidebar--section .quality-advanced").addClass("hide")
         loadPreset(settings.app.qualityPreset)
     } else {
-        $(".sidebar--section .quality-basic").addClass("hide")
+       // $(".sidebar--section .quality-basic").addClass("hide")
         $(".sidebar--section .quality-advanced").removeClass("hide")
     }
 }
@@ -470,7 +470,9 @@ var defaultSettings = {
     },
     jpg: {
         quality: 95,
-        make: false
+        make: false,
+        subsampling: 1,
+        useOriginal: false
     },
     png: {
         qualityMin: 50,
@@ -498,7 +500,9 @@ const qualityPresets = [
     // Low
     {
         jpg: {
-            quality: 77
+            quality: 77,
+            subsampling: 3,
+            useOriginal: false
         },
         png: {
             qualityMin: 1,
@@ -511,7 +515,9 @@ const qualityPresets = [
     // Medium
     {
         jpg: {
-            quality: 85
+            quality: 85,
+            subsampling: 2,
+            useOriginal: false
         },
         png: {
             qualityMin: 10,
@@ -524,7 +530,9 @@ const qualityPresets = [
     // High
     {
         jpg: {
-            quality: 94
+            quality: 94,
+            subsampling: 1,
+            useOriginal: true
         },
         png: {
             qualityMin: 15,
@@ -537,7 +545,9 @@ const qualityPresets = [
     // Lossless-ish
     {
         jpg: {
-            quality: 95
+            quality: 95,
+            subsampling: 1,
+            useOriginal: true
         },
         png: {
             qualityMin: 25,
@@ -587,6 +597,7 @@ function readAllInputSources() {
         }
         $(this).val(arr);
     });
+    resyncAllInputs();
 }
 readAllInputSources()
 
