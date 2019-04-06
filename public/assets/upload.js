@@ -1,3 +1,8 @@
+parseBool = (value) => {
+    let str = String(value)
+    return (str.toLowerCase() === "true" || str.toLowerCase() === "yes" || str.toLowerCase() === "1" || value === 1 || value === true ? true : false)
+}
+
 var Upload = function (file, callback) {
     this.file = file;
     this.callback = callback;
@@ -660,7 +665,7 @@ $(".action--download-all").click(function(){
         },
         success: function (data) {
             console.log(data)
-            if(settings.app.overwrite && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
+            if(parseBool(settings.app.overwrite) && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
                 for(var i = 0; i < files.list.length; i++) {
                     downloadFile(files.list[i])
                 }
