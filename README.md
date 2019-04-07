@@ -37,7 +37,7 @@ For the average user, It's recommended that you use the [desktop app](https://gi
 - Run *npm install*
 - If you're missing any image libraries (depending on your OS), get those and re-run *npm install* as needed
 - Run *node index.js*
-- Access Crushee through port 1603. By default, it listens for any host name. (ex. http://localhost:1603)
+- Access Crushee through port 1603. By default, it listens only on the loopback interface (ex. `http://localhost:1603`). You may change the listening interface by modifying the `CRUSHEE_HOST` environment variable (ex. to listen to all network interfaces, `export CRUSHEE_HOST=0.0.0.0`) and the listening port by modifying either the `CRUSHEE_PORT` or `PORT` environment variable (ex. to listen on 8080/tcp, `export CRUSHEE_PORT=8080`).
 
 
 
