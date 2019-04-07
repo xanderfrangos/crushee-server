@@ -244,11 +244,11 @@ async function job(uuid, fn, f, o, options = {}) {
 
     let uuidDir = o + uuid + "/"
 
-    sendGenericMessage("Manipulating...")
-    // Convert with Sharp
+    // Process with sharp
+    sendGenericMessage("Processing...")
     let resized = await processImage(f, uuidDir, options)
     if (!resized) {
-        consoleLog("Failed manipulation! Returning original file :(")
+        consoleLog("Failed processing! Returning original file :(")
         resized = f;
     }
 
@@ -277,20 +277,27 @@ async function job(uuid, fn, f, o, options = {}) {
     }
     debug = false
 
-    // Compress
+    // Compress processed file
     sendGenericMessage("Compressing...")
-    let compressed = await compressFile(resized, uuidDir, options)
+    let compressedAwait = compressFile(resized, uuidDir, options)
+
+    // If we previously processed the file with sharp, compress original too, for comparison
+    let compressedOriginalAwait = false
+    if(tryCompressingOriginal) {
+        sendGenericMessage("Compressing original...")
+        compressedOriginalAwait = compressFile(f, uuidDir, options)
+    }
+
+    // Check in with compressed processed file
+    let compressed = await compressedAwait
     if (!compressed) {
         consoleLog("Failed compress! Returning original file :(")
         compressed = resized;
     }
 
-
-    // If we previously manipulated the file with sharp, compress original too, for comparison
+    // Check in with compressed original
     if(tryCompressingOriginal) {
-        
-        sendGenericMessage("Compressing original...")
-        let compressedOriginal = await compressFile(f, uuidDir, options)
+        let compressedOriginal = await compressedOriginalAwait
         if (!compressedOriginal) {
             consoleLog("Failed compressing original! Returning original file :(")
             compressedOriginal = f
