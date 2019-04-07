@@ -327,7 +327,9 @@ app.all('/health', (req, res) => {
 
 // Start listening
 const port = process.env.PORT || process.env.CRUSHEE_PORT || 1603
-app.listen(port, (e) => {
-    console.log(`Starting server v${serverVersion} on port ${port}`)
+// On macOS, $HOST is already taken by default.
+const host = process.env.CRUSHEE_HOST || '127.0.0.1';
+app.listen(port, host, (e) => {
+    console.log(`Starting server v${serverVersion} on ${host}:${port}`)
 })
 
