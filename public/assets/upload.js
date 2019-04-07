@@ -160,11 +160,16 @@ $("#file").on("change", function (e) {
 
 });
 $(".action--add-file").click(function (e) {
-    console.log("Open file picker")
     e.preventDefault();
-    $("#file").click();
+    openFilePicker()
     return false;
 });
+
+
+function openFilePicker() {
+    console.log("Open file picker")
+    $("#file").click();
+}
 
 
 $(".action--reset-settings").click(function (e) {
