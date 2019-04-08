@@ -1,4 +1,6 @@
 const express = require("express")
+const app = express();
+const expressWs = require('express-ws')(app);
 const fileUpload = require('express-fileupload');
 const fs = require("fs")
 const os = require("os")
@@ -7,6 +9,7 @@ const { fork, spawn } = require('child_process');
 const del = require('del')
 const uuidv1 = require('uuid/v1')
 const JSZip = require("jszip");
+const EventEmitter = require('events');
 
 // Server version
 const serverVersion = require('./package.json').version
@@ -14,9 +17,10 @@ const serverVersion = require('./package.json').version
 const outPath = "public/out/"
 const tmpPath = outPath + "tmp/"
 
-const app = express();
+
 
 let jobQueue = []
+let uploads = []
 
 // Limit extra threads
 let maxProcessingThreads = process.env.CRUSHEE_THREADS || os.cpus().length
@@ -44,10 +48,10 @@ function cleanUp() {
         if (!fs.existsSync(outPath)) {
             fs.mkdirSync(outPath, { recursive: true })
         }
-    } catch(e) {
+    } catch (e) {
         console.log(e)
     }
-    
+
 
     console.log("Done cleaning!")
 
@@ -61,7 +65,7 @@ for (let i = 0; i < maxProcessingThreads; i++) {
 }
 
 function makeThread(threadNum) {
-    let thread = fork('./manipulate-file.js', [], { silent: false }) 
+    let thread = fork('./manipulate-file.js', [], { silent: false })
 
     const forked = {
         queue: 0,
@@ -81,11 +85,11 @@ function makeThread(threadNum) {
             fileProcessorThreads[data.threadNum].queue = data.result
         } else if (data.type === "generic") {
             console.log(`Thread ${data.threadNum} says "${data.message}"`)
-        } else if(data.type === "alive") {
+        } else if (data.type === "alive") {
             forked.lastAlive = Date.now()
-        } else if(data.type === "jobRequest") {
+        } else if (data.type === "jobRequest") {
 
-            if(jobQueue.length > 0) {
+            if (jobQueue.length > 0) {
                 // Get job from queue
                 let job = jobQueue.splice(0, 1)[0]
                 forked.jobs[job.uuid] = job
@@ -102,7 +106,7 @@ function makeThread(threadNum) {
                 })
             }
 
-        } else if(data.type === "finished") {
+        } else if (data.type === "finished") {
             // Return response from server
             forked.jobs[data.uuid].callback(data.result)
             delete forked.jobs[data.uuid];
@@ -120,7 +124,7 @@ function monitorThreads() {
     fileProcessorThreads.forEach((fork, idx) => {
         const now = Date.now()
         //console.log(`Thread ${idx} last alive ${(now - fork.lastAlive) / 1000}s ago`)
-        if(fork.lastAlive < now - (1000 * 10)) {
+        if (fork.lastAlive < now - (1000 * 10)) {
             console.log(`Thread ${idx} responsive. Restarting thread.`)
             fork.thread.kill()
             fileProcessorThreads[idx] = makeThread(idx)
@@ -164,7 +168,8 @@ function getAvailableThread() {
 }
 
 async function processFile(uuid, uploadName, inFile, outDir, options = {}) {
-
+    uploads[uuid].status = "crushing"
+    fileUpdateEvent(uuid)
 
     // Wait for response from thread
     return new Promise((resolve, reject) => {
@@ -177,28 +182,33 @@ async function processFile(uuid, uploadName, inFile, outDir, options = {}) {
 
     }).then((result) => {
         // We did it!
+        uploads[uuid] = Object.assign(uploads[uuid], result)
+        uploads[uuid].status = "done"
+        fileUpdateEvent(uuid)
         return result
     }).catch((e) => {
         // Something bad went wrong with the job
         console.log(e)
-        return false
+        uploads[uuid].status = "error"
+        fileUpdateEvent(uuid)
+        throw e
     })
 
 }
 
 getUUID = () => {
-        // Make UUID
-        let uuid = uuidv1();
-        let uuidDir = outPath + uuid + "/"
-    
-        // Check if folder UUID exists, reroll
-        while (fs.existsSync(uuidDir)) {
-            consoleLog("UUID exists, rerolling")
-            uuid = uuidv1();
-            uuidDir = outPath + uuid + "/"
-        }
-        fs.mkdirSync(uuidDir)
-        return uuid
+    // Make UUID
+    let uuid = uuidv1();
+    let uuidDir = outPath + uuid + "/"
+
+    // Check if folder UUID exists, reroll
+    while (fs.existsSync(uuidDir)) {
+        consoleLog("UUID exists, rerolling")
+        uuid = uuidv1();
+        uuidDir = outPath + uuid + "/"
+    }
+    fs.mkdirSync(uuidDir)
+    return uuid
 }
 
 
@@ -233,7 +243,7 @@ app.post('/upload', function (req, res) {
     const uuidDir = outPath + uuid + "/"
 
     fs.writeFileSync(uuidDir + "filename", file.name)
-    
+
     const filePath = uuidDir + "source" + path.extname(file.name)
     file.mv(filePath, function (err) {
         if (err) {
@@ -246,65 +256,213 @@ app.post('/upload', function (req, res) {
             console.log("Couldn't decode recieved settings")
         }
 
+        uploads[uuid] = {
+            uuid,
+            filename: file.name,
+            status: 'uploading',
+            url: "",
+            endSize: 1,
+            original: file.name,
+            preview: "",
+            startSize: 1
+        }
+
+        res.json(uploads[uuid])
+
+        fileUpdateEvent(uuid)
+
         // Send off to a thread
         processFile(uuid, file.name, filePath, outPath, settings).then((result) => {
             // Respond with crushed image and preview thumbnail
-            result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
-            result.preview = 'd/' + result.uuid + '/preview/' + path.basename(result.preview)
-            result.original = 'd/' + result.uuid + '/source' + path.extname(file.name)
             res.json(result);
+        }).catch((e) => {
+            //removeUUID(uuid)
         })
     });
 });
+
+const fileStatus = new EventEmitter()
+const fileUpdateEvent = (uuid) => {
+    let file = Object.assign({}, uploads[uuid])
+    // Remove sever-only data... once I add some?
+    fileStatus.emit("update", file)
+}
+
+app.ws('/messages', function (ws, req) {
+
+    let send = (type, payload = {}) => {
+        if (ws.readyState === 1)
+            ws.send(JSON.stringify({
+                type,
+                payload
+            }))
+    }
+
+    fileStatus.on("update", (file) => {
+        send("update", {
+            uuid: file.uuid,
+            file
+        })
+    })
+
+    fileStatus.on("replaceUUID", (oldUUID, file) => {
+        send("replace", {
+            oldUUID,
+            file
+        })
+    })
+
+
+    let interval = setInterval(() => {
+        //send("ping")
+    }, 1000)
+
+    ws.on('close', (e) => {
+        clearInterval(interval)
+    })
+
+    ws.on('message', function (msg) {
+        data = JSON.parse(msg)
+        console.log(data)
+        let uuids
+        if (typeof data.type != undefined)
+            switch (data.type) {
+                case "all-files":
+                    send("all-files", getAllFiles())
+                    break;
+                case "clear":
+                    removeFiles(data.payload)
+                    break;
+                case "check":
+                    uuids = checkUUIDs(data.payload)
+                    send("check", uuids)
+                    break;
+                case "recrush":
+                    uuids = data.payload.uuids
+                    if (typeof uuids == "object") {
+                        uuids.forEach((uuid) => recrush(uuid, data.payload.options))
+                    } else {
+                        recrush(uuids, data.payload.options)
+                    }
+                    break;
+            }
+    });
+});
+
+
+const getAllFiles = () => {
+    files = []
+    console.log(uploads)
+    for (let uuid in uploads) {
+        if (uploads[uuid].status != "error") {
+            files.push(uploads[uuid])
+        }
+    }
+    return files
+}
+
+const removeFiles = (uuids) => {
+
+    if (typeof uuids === "string") {
+        // Only one UUID provided. Deleting files and metadata.
+        removeUUID(uuids)
+        return true
+    } else if (typeof uuids === "object") {
+        // Multiple UUIDs provided. Deleting files and metadata.
+        uuids.forEach((uuid) => {
+            removeUUID(uuid)
+        })
+        return true
+    }
+    // WTF did you send?
+    return false
+}
+
+const removeUUID = (uuid) => {
+    try {
+        let cleanedUUID = uuid.replace(".", "")
+        uploads[cleanedUUID].status = "deleted"
+        del(outPath + cleanedUUID + "/")
+        fileUpdateEvent(uuid)
+    } catch (e) {
+        console.log(`Couldn't delete ${uuid}`)
+    }
+}
+
+const checkUUIDs = (uuids) => {
+    if (typeof uuids === "string") {
+        if (typeof uploads[uuids] === "object") {
+            return [uuids]
+        }
+    } else if (typeof uuids === "object") {
+        let availableUUIDs = []
+        uuids.forEach((uuid) => {
+            if (typeof uploads[uuids] === "object") {
+                availableUUIDs.push(uuid)
+            }
+        })
+        return availableUUIDs
+    }
+}
+
+
+const recrush = (oldUUID, options = {}) => {
+    let uuid = getUUID()
+    let settings = JSON.parse(options)
+    let original = fs.readFileSync(outPath + oldUUID + "/filename", "utf8")
+    const filePath = outPath + uuid + "/source" + path.extname(original)
+    fs.copyFileSync(outPath + oldUUID + "/source" + path.extname(original), filePath)
+
+    fs.writeFileSync(outPath + uuid + "/filename", original)
+
+    uploads[oldUUID].status = "crushing"
+    fileUpdateEvent(oldUUID)
+
+    uploads[uuid] = {
+        uuid,
+        filename: uploads[oldUUID].filename,
+        status: 'crushing',
+        url: "",
+        endSize: 1,
+        original: uploads[oldUUID].original,
+        preview: "",
+        startSize: 1
+    }
+
+    // Send off to a thread
+    processFile(uuid, original, filePath, outPath, settings).then((result) => {
+        fileStatus.emit("replaceUUID", oldUUID, uploads[uuid])
+    })
+}
+
 
 
 app.post('/zip', function (req, res) {
     let files = JSON.parse(req.body.files)
     let zip = new JSZip();
-    for(let file of files) {
+    for (let file of files) {
         zip.file(file.name, fs.readFileSync(outPath + "/" + file.uuid + "/crushed/" + file.name));
     }
     zip.generateAsync({
-        type:"nodebuffer",
+        type: "nodebuffer",
         compression: "DEFLATE",
         compressionOptions: {
             level: 9
         }
     })
-    .then((content) => {
-        const uuid = getUUID()
-        const zipPath = outPath + uuid + "/download.zip"
-        fs.writeFile(zipPath, content, () => {
-            res.json({
-                uuid,
-                dl: "d/" + uuid + "/download.zip"
-            });
-        })
-        
-    });
+        .then((content) => {
+            const uuid = getUUID()
+            const zipPath = outPath + uuid + "/download.zip"
+            fs.writeFile(zipPath, content, () => {
+                res.json({
+                    uuid,
+                    dl: "d/" + uuid + "/download.zip"
+                });
+            })
+
+        });
 })
 
-app.post('/recrush', function (req, res) {
-    let oldUUID = req.body.uuid
-    let uuid = getUUID()
-    let settings = JSON.parse(req.body.settings)
-    let original = fs.readFileSync(outPath + oldUUID + "/filename", "utf8")
-    const filePath = outPath + uuid + "/source" + path.extname(original) 
-    fs.copyFileSync(outPath + oldUUID + "/source" + path.extname(original) , filePath)
-
-    fs.writeFileSync(outPath + uuid + "/filename", original)
-
-    // Send off to a thread
-    processFile(uuid, original, filePath, outPath, settings).then((result) => {
-        console.log(result.preview)
-        // Respond with crushed image and preview thumbnail
-        result.dl = 'd/' + result.uuid + '/crushed/' + result.filename
-        result.preview = 'd/' + result.uuid + '/preview/' + path.basename(result.preview)
-        result.original = 'd/' + result.uuid + '/source' + path.extname(original)
-        res.json(result);
-    })
-    
-})
 
 // Images that have been compressed will be served here
 app.use("/d", express.static(outPath, {

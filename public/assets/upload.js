@@ -120,29 +120,24 @@ $("html").bind("drop", function (e) {
 function UploadedFileCallback(data, file) {
     console.log("RESPONSE", data, file);
 
-    if(data === false) {
+    if (data === false) {
         file.setStatus("error")
         return false
     }
 
-    file.startSize = data.sourcesize
-    file.endSize = data.finalsize
-    file.uuid = data.uuid
-    file.url = data.dl
-    file.preview = data.preview
-    file.originalURL = data.original
-    file.name = data.filename
+
+    for (var key in data) {
+        file[key] = data[key]
+    }
 
     file.setFilename(file.name)
-
-    file.setStatus("done")
-
+    file.setStatus(file.status)
 }
 
 
 var forcingFileNameChange = false;
 $("#file").on("change", function (e) {
-    if(forcingFileNameChange) {
+    if (forcingFileNameChange) {
         forcingFileNameChange = false;
         return false;
     }
@@ -168,7 +163,7 @@ $(".action--add-file").click(function (e) {
 
 function openFilePicker() {
     console.log("Open file picker")
-    $("#file").click();
+    window.document.getElementById("file").click();
 }
 
 
@@ -185,29 +180,30 @@ function setFilename(filename) {
     this.elem.find(".title").text(filename);
 }
 
-function setStatus(inStatus) {
+function setStatus(inStatus, context = this) {
+    console.log(inStatus)
     let status = inStatus.toLowerCase()
-    this.status = status
-    this.elem.attr('data-status', status)
+    context.status = status
+    context.elem.attr('data-status', status)
     if (status === "done") {
-        var size = getFormattedSize(this.endSize)
+        var size = getFormattedSize(context.endSize)
         var percent = getFormattedPercent
-        this.elem.find('.preview img').attr('src', this.preview)
-        this.elem.find('.details .subtitle').html(`<span>${size}</span><span>&centerdot;</span><span class="bold">${percent(this.startSize, this.endSize)}</span>`)
+        context.elem.find('.preview img').attr('src', context.preview)
+        context.elem.find('.details .subtitle').html(`<span>${size}</span><span>&centerdot;</span><span class="bold">${percent(context.startSize, context.endSize)}</span>`)
         updateTotals()
-    } else if(status === "error") {
-        this.elem.find('.details .subtitle').html(`<span class="bold error">Error: Could not process this file</span>`)
-    } else if(status === "crushing") {
-        this.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
-    } else if(status === "deleted") {
+    } else if (status === "error") {
+        context.elem.find('.details .subtitle').html(`<span class="bold error">Error: Could not process context file</span>`)
+    } else if (status === "crushing") {
+        context.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
+    } else if (status === "deleted") {
         var foundDeleted = false
-        for(var i = 0; i < files.list.length; i++) {
-            if(files.list[i].status != "deleted") {
+        for (var i = 0; i < files.list.length; i++) {
+            if (files.list[i].status != "deleted") {
                 foundDeleted = true
                 break
             }
         }
-        if(!foundDeleted) {
+        if (!foundDeleted) {
             clearAllFiles()
         }
     }
@@ -230,21 +226,21 @@ function getFormattedSize(size) {
 }
 
 function getFormattedPercent(start, end) {
-    if(start == 0 || end == 0)
-    return "0%"
-    if(start < end) {
+    if (start == 0 || end == 0)
+        return "0%"
+    if (start < end) {
         return ((100 + ((end / start) * 100)).toFixed(0) + "% larger")
     } else {
         return ((100 - ((end / start) * 100)).toFixed(0) + "% smaller")
     }
-    
+
 }
 
 
 function updateTotals() {
     var totalStart = 0;
     var totalEnd = 0;
-    for(var i in files.list) {
+    for (var i in files.list) {
         totalStart += files.list[i].startSize
         totalEnd += files.list[i].endSize
     }
@@ -283,8 +279,8 @@ var files = {
             setStatus: setStatus,
             setFilename: setFilename,
             path: data.path || false,
-            bind: function () { 
-                this.elem = $(".elem--file[data-id='" + this.id + "']") 
+            bind: function () {
+                this.elem = $(".elem--file[data-id='" + this.id + "']")
                 this.elem.find('.actions .save-button').click(actionSaveButton)
                 this.elem.find('.actions .more-button').click(actionMoreButton)
                 this.elem.find('.preview').click(showComparison)
@@ -297,7 +293,17 @@ var files = {
     },
     list: [],
     nextID: 0,
-    getID: function () { return this.nextID++ }
+    getID: function () { return this.nextID++ },
+    getFileID: function (uuid) {
+        var id = false
+        for (var i = 0; i < files.list.length; i++) {
+            if (files.list[i].uuid == uuid) {
+                id = i
+                break
+            }
+        }
+        return id
+    }
 }
 function fileUploading(file) {
 
@@ -305,7 +311,6 @@ function fileUploading(file) {
         name: file.name,
         path: file.path || false
     })
-
 
     showBackButton(true)
     createNewFileHTML(file)
@@ -361,7 +366,7 @@ function createNewFileHTML(file) {
 
 function showComparison(e) {
     var file = files.list[$(this).parent().parent().attr("data-id")]
-    if(file.status != "done")
+    if (file.status != "done")
         return false;
 
     $(".page--comparison").addClass("show");
@@ -372,12 +377,12 @@ function showComparison(e) {
 
 
 
-$(".page--comparison").click(function() {
+$(".page--comparison").click(function () {
     $(this).removeClass("show")
 })
 
 var beforeElem = $(".divider-wrap")
-$(".page--comparison").mousemove(function(e) {
+$(".page--comparison").mousemove(function (e) {
     beforeElem.width(e.pageX)
 })
 
@@ -406,40 +411,40 @@ document.addEventListener('dragover', function (e) {
 
 
 
-$("[data-linked]").on("change", function(e) {
+$("[data-linked]").on("change", function (e) {
     var linkedTo = $(this).attr("data-linked");
     $("input[data-linked='" + linkedTo + "']").val($(this).val());
     syncInput(this)
 });
 
-$("[data-linked]").on("input", function(e) {
+$("[data-linked]").on("input", function (e) {
     var linkedTo = $(this).attr("data-linked");
     $("input[data-linked='" + linkedTo + "']").val($(this).val());
     syncInput(this)
 });
 
-$(".input--toggle input").on("change", function(e) {
+$(".input--toggle input").on("change", function (e) {
     syncInput(this)
 });
 
-$(".sidebar--section input").on("change", function(e) {
+$(".sidebar--section input").on("change", function (e) {
     updateSetting($(this).attr("name"), $(this).val())
 });
 
-$(".input--toggle").click(function(){
+$(".input--toggle").click(function () {
     var input = $(this).children("input");
     console.log(input.attr("value"))
     input.attr("value", (input.attr("value") == "true" ? "false" : "true"))
-    
+
     syncInput(this)
 });
 
 function syncInput(elem) {
-    if($(elem).hasClass("input--toggle")) {
+    if ($(elem).hasClass("input--toggle")) {
         $(elem).attr("data-value", $(elem).children("input").eq(0).attr("value"))
         updateSetting($(elem).attr("data-linked"), $(elem).children("input").eq(0).attr("value"))
     }
-    if($(elem).attr("data-action")) {
+    if ($(elem).attr("data-action")) {
         window[$(elem).attr("data-action")](elem)
     }
 };
@@ -447,7 +452,7 @@ function syncInput(elem) {
 
 function changePreset(elem) {
     var newPreset = $(elem).val()
-    if(newPreset != settings.app.qualityPreset) {
+    if (newPreset != settings.app.qualityPreset) {
         settings.app.qualityPreset = newPreset
         loadPreset(settings.app.qualityPreset)
     }
@@ -455,7 +460,7 @@ function changePreset(elem) {
 
 var loadingPreset = false;
 function loadPreset(idx) {
-    if(loadingPreset) return false;
+    if (loadingPreset) return false;
     settings.jpg = Object.assign(settings.jpg, qualityPresets[idx].jpg)
     settings.png = Object.assign(settings.png, qualityPresets[idx].png)
     settings.webp = Object.assign(settings.webp, qualityPresets[idx].webp)
@@ -466,12 +471,12 @@ function loadPreset(idx) {
 
 
 function toggleAdvancedQuality() {
-    if(settings.app.advancedQuality == "false") {
+    if (settings.app.advancedQuality == "false") {
         //$(".sidebar--section .quality-basic").removeClass("hide")
         $(".sidebar--section .quality-advanced").addClass("hide")
         loadPreset(settings.app.qualityPreset)
     } else {
-       // $(".sidebar--section .quality-basic").addClass("hide")
+        // $(".sidebar--section .quality-basic").addClass("hide")
         $(".sidebar--section .quality-advanced").removeClass("hide")
     }
 }
@@ -575,7 +580,7 @@ const qualityPresets = [
 ]
 
 
-var getSettings = function() {
+var getSettings = function () {
     var encoded = localStorage.getItem("settings");
     var parsed = JSON.parse(encoded);
     var merged = Object.assign(defaultSettings, parsed);
@@ -592,22 +597,22 @@ var settings = getSettings();
 
 function updateSetting(setting, value) {
     var keys = setting.split(".");
-    if(keys.length == 1)
+    if (keys.length == 1)
         settings[keys[0]] = value;
-    else if(keys.length == 2)
+    else if (keys.length == 2)
         settings[keys[0]][keys[1]] = value;
-    else if(keys.length == 3)
+    else if (keys.length == 3)
         settings[keys[0]][keys[1]][keys[2]] = value;
 
     writeSettings();
 }
 
 function readAllInputSources() {
-    $(".sidebar--section input").each(function(e) {
+    $(".sidebar--section input").each(function (e) {
         var input = $(this);
         var settingKeys = input.attr("name").split(".");
         var arr = settings;
-        for(var i = 0; i < settingKeys.length; i++) {
+        for (var i = 0; i < settingKeys.length; i++) {
             arr = arr[settingKeys[i]];
         }
         $(this).val(arr);
@@ -618,8 +623,8 @@ readAllInputSources()
 
 
 function resyncAllInputs() {
-    $("[data-linked]").each(function() {
-        syncInput(this)        
+    $("[data-linked]").each(function () {
+        syncInput(this)
     });
 }
 resyncAllInputs()
@@ -638,13 +643,13 @@ function toggleDarkMode(elem) {
 
 
 
-$(".action--download-all").click(function(){
+$(".action--download-all").click(function () {
     var that = this;
     var formData = new FormData();
     var filesList = [];
-    
-    for(var i = 0; i < files.list.length; i++) {
-        if(files.list[i].status == "done") {
+
+    for (var i = 0; i < files.list.length; i++) {
+        if (files.list[i].status == "done") {
             filesList.push({
                 name: files.list[i].name,
                 uuid: files.list[i].uuid
@@ -670,8 +675,8 @@ $(".action--download-all").click(function(){
         },
         success: function (data) {
             console.log(data)
-            if(parseBool(settings.app.overwrite) && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
-                for(var i = 0; i < files.list.length; i++) {
+            if (parseBool(settings.app.overwrite) && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
+                for (var i = 0; i < files.list.length; i++) {
                     downloadFile(files.list[i])
                 }
             } else {
@@ -692,12 +697,12 @@ $(".action--download-all").click(function(){
 
 
 function downloadFile(file) {
-    if(file.status != "done") {
+    if (file.status != "done") {
         console.log("File not ready to be downloaded!")
         return false
     }
     console.log(file)
-    if(settings.app.overwrite == "true" && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
+    if (settings.app.overwrite == "true" && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
         window.electron.download(window.location.origin + "/" + file.url, file.path, file.name, (cb) => {
             console.log(cb)
         })
@@ -708,20 +713,26 @@ function downloadFile(file) {
 
 
 
-$(".action--recompress").click(function(){
-    
-    for(var i = 0; i < files.list.length; i++) {
-        if(files.list[i].status == "done") {
-            recrush(files.list[i])
+$(".action--recompress").click(function () {
+    var uuids = []
+    for (var i = 0; i < files.list.length; i++) {
+        if (files.list[i].status == "done") {
+            //recrush(files.list[i])
+            uuids.push(files.list[i].uuid)
         }
     }
-    
+    sendMessage("recrush", {
+        uuids,
+        options: JSON.stringify(settings)
+    })
+
 });
 
 
 $(".action--clear-all").click(clearAllFiles);
 
 function clearAllFiles() {
+    sendMessage("clear", getAllUUIDS())
     files.nextID = 0
     files.list = []
     $(".page--files--list").html("")
@@ -732,79 +743,57 @@ function clearAllFiles() {
 }
 
 
+function getAllUUIDS() {
+    var uuids = []
+    files.list.forEach((file) => {
+        uuids.push(file.uuid)
+    })
+    return uuids
+}
 
-$(".action--display-settings").click(function(e) {
-    if($("body").hasClass("display-settings")) {
+
+$(".action--display-settings").click(function (e) {
+    if ($("body").hasClass("display-settings")) {
         $("body").removeClass("display-settings")
         showBackButton(false)
     } else {
         $("body").addClass("display-settings")
         showBackButton(true)
     }
-    $(".sidebar").addClass("animate") 
+    $(".sidebar").addClass("animate")
 })
 
 var backButtonDepth = 0
 function showBackButton(show) {
-    if(show) {
+    if (show) {
         backButtonDepth++
         $("body").addClass("show-back-button")
         $(".elem--mobile-nav .back-button").addClass("animate")
     } else {
         backButtonDepth--
-        if(backButtonDepth == 0)
+        if (backButtonDepth == 0)
             $("body").removeClass("show-back-button")
     }
 }
 
 
 
-$(".action--back-button").click(function(e) {
-    if($("body").hasClass("display-settings")) {
+$(".action--back-button").click(function (e) {
+    if ($("body").hasClass("display-settings")) {
         $("body").removeClass("display-settings")
         showBackButton(false)
-    } else if($(".page--files").hasClass("show")) {
+    } else if ($(".page--files").hasClass("show")) {
         clearAllFiles()
         showBackButton(false)
     }
 })
 
-function recrush(fileObj) {
-    var that = this;
-    var formData = new FormData();
-    formData.append("uuid", fileObj.uuid);
-    formData.append("settings", JSON.stringify(settings))
-
-
-    fileObj.setStatus("crushing")
-
-    $.ajax({
-        type: "POST",
-        url: "/recrush",
-        xhr: function () {
-            var myXhr = $.ajaxSettings.xhr();
-            //myXhr.upload.file = file;
-            //myXhr.upload.callback = that.callback;
-            //myXhr.upload.upload = that;
-            if (myXhr.upload) {
-                //myXhr.upload.addEventListener('progress', that.progressHandling, false);
-            }
-            return myXhr;
-        },
-        success: function (data) {
-            console.log(data)
-            UploadedFileCallback(data, fileObj)
-        },
-        error: function (error) {
-            console.log(error)
-        },
-        async: true,
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        timeout: 60000
-    });
+function recrush(file) {
+    sendMessage("recrush", {
+        uuids: file.uuid,
+        options: JSON.stringify(settings)
+    })
+    return true;
 }
 
 
@@ -816,20 +805,113 @@ function recrush(fileObj) {
 
 var menuItemID = -1;
 
-$(".page--menu-layer .bg").click(function(e) {
+$(".page--menu-layer .bg").click(function (e) {
     $(".elem--menu").removeClass("active")
 })
 
-$(".elem--menu.single-file .download").click(function(e) {
+$(".elem--menu.single-file .download").click(function (e) {
     downloadFile(files.list[files.menuItemID])
     $(".elem--menu").removeClass("active")
 })
-$(".elem--menu.single-file .recrush").click(function(e) {
+$(".elem--menu.single-file .recrush").click(function (e) {
     recrush(files.list[files.menuItemID])
     $(".elem--menu").removeClass("active")
 })
-$(".elem--menu.single-file .remove").click(function(e) {
-    $(".elem--file[data-id='" + files.menuItemID + "'").remove()
-    files.list[files.menuItemID].setStatus("deleted")
+$(".elem--menu.single-file .remove").click(function (e) {
+    deleteUUID(files.list[files.menuItemID].uuid)
     $(".elem--menu").removeClass("active")
 })
+
+
+function deleteUUID(uuid) {
+    files.list.forEach((file, idx) => {
+        if (uuid == file.uuid) {
+            $(".elem--file[data-id='" + idx + "'").remove()
+            delete files.list[idx].setStatus("deleted")
+        }
+    })
+
+}
+
+
+
+
+
+
+
+
+
+
+var ws = null;
+var reconnect = false;
+var connecting = false;
+function websocketConnect() {
+    if (connecting) return false;
+    connecting = true
+    ws = new WebSocket('ws://' + window.location.host + '/messages');
+
+    ws.onopen = function () {
+        console.log('Connected to server!')
+        connecting = false
+        clearInterval(reconnect)
+        sendMessage('check', getAllUUIDS())
+    }
+
+    ws.onmessage = function (ev) {
+        var data = JSON.parse(ev.data)
+        console.log(data)
+        if (typeof data.type != "undefined")
+            switch (data.type) {
+                case "check":
+                    checkUUIDs(data.payload);
+                    break;
+                case "update":
+                    var id = files.getFileID(data.payload.uuid)
+                    if (id !== false) {
+                        for (var key in data.payload.file) {
+                            files.list[id][key] = data.payload.file[key]
+                        }
+                        files.list[id].setStatus(data.payload.file.status)
+                    }
+                    break;
+                case "replace":
+                    var id = files.getFileID(data.payload.oldUUID)
+                    for (var key in data.payload.file) {
+                        files.list[id][key] = data.payload.file[key]
+                    }
+                    files.list[id].setStatus(data.payload.file.status)
+                    break;
+
+            }
+    }
+
+    ws.onclose = (ev) => {
+        console.warn("Lost connection to server.")
+        reconnect = setInterval(websocketConnect, 500)
+    }
+
+    ws.onerror = (ev) => {
+        console.error(ev)
+    }
+
+}
+
+const sendMessage = (type, payload = {}) => {
+    ws.send(JSON.stringify({
+        type,
+        payload
+    }))
+}
+
+
+function checkUUIDs(uuids) {
+    files.list.forEach((file) => {
+        if (uuids.indexOf(file.uuid) === -1) {
+            deleteUUID(file.uuid)
+        }
+    })
+    return uuids
+}
+
+
+websocketConnect()

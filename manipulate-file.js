@@ -364,9 +364,11 @@ async function job(uuid, fn, f, o, options = {}) {
     let result = {
         uuid: uuid,
         filename: path.basename(finalFile, path.extname(finalFile)) + path.extname(finalFile),
-        sourcesize: sourceSize,
-        finalsize: finalSize,
-        preview: preview
+        startSize: sourceSize,
+        endSize: finalSize,
+        url: 'd/' + uuid + '/crushed/' + path.basename(finalFile),
+        preview: 'd/' + uuid + '/preview/' + path.basename(preview),
+        originalURL: 'd/' + uuid + '/source' + path.extname(f)
     }
 
     sendGenericMessage("Done!")
