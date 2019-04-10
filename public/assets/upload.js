@@ -189,6 +189,7 @@ function setStatus(inStatus, context = this) {
         var size = getFormattedSize(context.endSize)
         var percent = getFormattedPercent
         context.elem.find('.preview img').attr('src', context.preview)
+        context.elem.find('.details .title').text(context.filename)
         context.elem.find('.details .subtitle').html(`<span>${size}</span><span>&centerdot;</span><span class="bold">${percent(context.startSize, context.endSize)}</span>`)
         updateTotals()
     } else if (status === "error") {

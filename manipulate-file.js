@@ -83,14 +83,17 @@ async function processImage(file, outFolder, options = {}, quality = 100) {
         let metadata = await image.metadata()
         sendGenericMessage("Detected format:" + metadata.format)
 
-        switch(metadata.format) {
-            case "jpeg":
-                ext = ".jpg"
-                break
-            default:
-                ext = metadata.format
-                break;
+        if(parseBool(settings.jpg.make) === false && parseBool(settings.webp.make) === false) {
+            switch(metadata.format) {
+                case "jpeg":
+                    ext = ".jpg"
+                    break
+                default:
+                    ext = metadata.format
+                    break;
+            }
         }
+        
 
         if(settings.resize.width || settings.resize.height) {
             image.resize(
@@ -100,11 +103,11 @@ async function processImage(file, outFolder, options = {}, quality = 100) {
                 )
         }
 
-        if(parseBool(options.jpg.make)) {
+        if(parseBool(settings.jpg.make)) {
             ext = ".jpg"
         }
 
-        if(parseBool(options.webp.make)) {
+        if(parseBool(settings.webp.make)) {
             ext = ".webp"
         }
         
@@ -364,6 +367,7 @@ async function job(uuid, fn, f, o, options = {}) {
     let result = {
         uuid: uuid,
         filename: path.basename(finalFile, path.extname(finalFile)) + path.extname(finalFile),
+        name: path.basename(finalFile, path.extname(finalFile)) + path.extname(finalFile),
         startSize: sourceSize,
         endSize: finalSize,
         url: 'd/' + uuid + '/crushed/' + path.basename(finalFile),
