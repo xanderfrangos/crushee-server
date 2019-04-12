@@ -256,28 +256,14 @@ app.post('/upload', function (req, res) {
             console.log("Couldn't decode recieved settings")
         }
 
-        uploads[uuid] = {
-            uuid,
-            filename: file.name,
-            status: 'uploading',
-            url: "",
-            endSize: 1,
-            original: file.name,
-            preview: "",
-            startSize: 1
-        }
+        newFile(file.name, uuid)
 
         res.json(uploads[uuid])
 
         fileUpdateEvent(uuid)
 
         // Send off to a thread
-        processFile(uuid, file.name, filePath, outPath, settings).then((result) => {
-            // Respond with crushed image and preview thumbnail
-            res.json(result);
-        }).catch((e) => {
-            //removeUUID(uuid)
-        })
+        processFile(uuid, file.name, filePath, outPath, settings)
     });
 });
 
@@ -298,6 +284,25 @@ app.ws('/messages', function (ws, req) {
             }))
     }
 
+    const uploadFile = (pathName, settings = {}, id = -1) => {
+        // Process uploaded image
+        const uuid = getUUID()
+        const uuidDir = outPath + uuid + "/"
+
+        const file = newFile(path.basename(pathName), uuid)
+        send("upload", {
+            id,
+            file
+        })
+        const filePath = uuidDir + "source" + path.extname(pathName)
+        fs.writeFileSync(uuidDir + "filename", path.basename(pathName))
+        fs.copyFileSync(pathName, filePath)
+    
+            // Send off to a thread
+            processFile(uuid, path.basename(pathName), filePath, outPath, settings)
+        
+}
+
     fileStatus.on("update", (file) => {
         send("update", {
             uuid: file.uuid,
@@ -312,13 +317,8 @@ app.ws('/messages', function (ws, req) {
         })
     })
 
-
-    let interval = setInterval(() => {
-        //send("ping")
-    }, 1000)
-
     ws.on('close', (e) => {
-        clearInterval(interval)
+        
     })
 
     ws.on('message', function (msg) {
@@ -332,6 +332,9 @@ app.ws('/messages', function (ws, req) {
                     break;
                 case "clear":
                     removeFiles(data.payload)
+                    break;
+                case "upload":
+                    uploadFile(data.payload.path, JSON.parse(data.payload.settings), data.payload.id)
                     break;
                 case "check":
                     uuids = checkUUIDs(data.payload)
@@ -348,6 +351,21 @@ app.ws('/messages', function (ws, req) {
             }
     });
 });
+
+
+const newFile = (filename, uuid) => {
+    uploads[uuid] = {
+        uuid,
+        filename: filename,
+        status: 'crushing',
+        url: "",
+        endSize: 1,
+        original: filename,
+        preview: "",
+        startSize: 1
+    }
+    return uploads[uuid]
+}
 
 
 const getAllFiles = () => {

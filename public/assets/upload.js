@@ -25,34 +25,47 @@ Upload.prototype.doUpload = function (file) {
     formData.append("file", this.file, this.getName());
     formData.append("settings", JSON.stringify(settings))
 
-    $.ajax({
-        type: "POST",
-        url: "/upload",
-        xhr: function () {
-            var myXhr = $.ajaxSettings.xhr();
-            myXhr.upload.file = file;
-            myXhr.upload.callback = that.callback;
-            myXhr.upload.upload = that;
-            if (myXhr.upload) {
-                myXhr.upload.addEventListener('progress', that.progressHandling, false);
-            }
-            return myXhr;
-        },
-        success: function (data) {
-            $("#output").append(data);
-            that.callback(data, that.fileData);
-        },
-        error: function (error) {
-            console.log(error)
-            that.fileData.setStatus("error")
-        },
-        async: true,
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        timeout: 60000
-    });
+    console.log(this.file)
+    if(isApp) {
+        // App local transfer
+        sendMessage("upload", {
+            path: file.path,
+            settings: JSON.stringify(settings),
+            id: files.list.indexOf(file)
+        })
+    } else {
+        // Browser HTTP upload
+        $.ajax({
+            type: "POST",
+            url: "/upload",
+            xhr: function () {
+                var myXhr = $.ajaxSettings.xhr();
+                myXhr.upload.file = file;
+                myXhr.upload.callback = that.callback;
+                myXhr.upload.upload = that;
+                if (myXhr.upload) {
+                    myXhr.upload.addEventListener('progress', that.progressHandling, false);
+                }
+                return myXhr;
+            },
+            success: function (data) {
+                $("#output").append(data);
+                that.callback(data, that.fileData);
+            },
+            error: function (error) {
+                console.log(error)
+                that.fileData.setStatus("error")
+            },
+            async: true,
+            data: formData,
+            cache: false,
+            contentType: false,
+            processData: false,
+            timeout: 60000
+        });
+    }
+
+    
 
 
 
@@ -714,7 +727,10 @@ function downloadFile(file) {
 
 
 
-$(".action--recompress").click(function () {
+$(".action--recompress").click(recrushAll);
+
+
+function recrushAll() {
     var uuids = []
     for (var i = 0; i < files.list.length; i++) {
         if (files.list[i].status == "done") {
@@ -726,8 +742,7 @@ $(".action--recompress").click(function () {
         uuids,
         options: JSON.stringify(settings)
     })
-
-});
+}
 
 
 $(".action--clear-all").click(clearAllFiles);
@@ -874,6 +889,13 @@ function websocketConnect() {
                         }
                         files.list[id].setStatus(data.payload.file.status)
                     }
+                    break;
+                case "upload":
+                    var id = data.payload.id;
+                    for (var key in data.payload.file) {
+                        files.list[id][key] = data.payload.file[key]
+                    }
+                    files.list[id].setStatus(data.payload.file.status)
                     break;
                 case "replace":
                     var id = files.getFileID(data.payload.oldUUID)
