@@ -1,4 +1,9 @@
-parseBool = (value) => {
+import $ from 'jquery';
+    window.$ = $;
+    window.jQuery = $;
+
+
+const parseBool = (value) => {
     let str = String(value)
     return (str.toLowerCase() === "true" || str.toLowerCase() === "yes" || str.toLowerCase() === "1" || value === 1 || value === true ? true : false)
 }
@@ -459,9 +464,19 @@ function syncInput(elem) {
         updateSetting($(elem).attr("data-linked"), $(elem).children("input").eq(0).attr("value"))
     }
     if ($(elem).attr("data-action")) {
-        window[$(elem).attr("data-action")](elem)
+        try {
+            window[$(elem).attr("data-action")](elem)
+        } catch(e) {
+            console.log($(elem).attr("data-action"))
+        }
+        
     }
 };
+
+function toggleDarkMode(elem) {
+    $("body").attr("data-theme", ($(elem).attr("data-value") == "true" ? "dark" : "light"))
+}
+window.toggleDarkMode = toggleDarkMode
 
 
 function changePreset(elem) {
@@ -471,6 +486,7 @@ function changePreset(elem) {
         loadPreset(settings.app.qualityPreset)
     }
 }
+window.changePreset = changePreset
 
 var loadingPreset = false;
 function loadPreset(idx) {
@@ -494,6 +510,7 @@ function toggleAdvancedQuality() {
         $(".sidebar--section .quality-advanced").removeClass("hide")
     }
 }
+window.toggleAdvancedQuality = toggleAdvancedQuality
 
 
 var defaultSettings = {
@@ -633,7 +650,7 @@ function readAllInputSources() {
     });
     resyncAllInputs();
 }
-readAllInputSources()
+
 
 
 function resyncAllInputs() {
@@ -641,13 +658,11 @@ function resyncAllInputs() {
         syncInput(this)
     });
 }
-resyncAllInputs()
 
 
 
-function toggleDarkMode(elem) {
-    $("body").attr("data-theme", ($(elem).attr("data-value") == "true" ? "dark" : "light"))
-}
+
+
 
 
 
@@ -936,5 +951,8 @@ function checkUUIDs(uuids) {
     return uuids
 }
 
+
+readAllInputSources()
+resyncAllInputs()
 
 websocketConnect()

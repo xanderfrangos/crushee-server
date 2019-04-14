@@ -5,3 +5,4 @@ node
 node.exe
 README.txt
 .DS_Store
+dist/*

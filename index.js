@@ -495,6 +495,7 @@ function setDownloadHeader(res, pathname) {
 
 // Non-user assets
 app.use("/assets", express.static('public/assets'))
+app.use("/assets", express.static('dist'))
 
 // Check server alive
 app.all('/health', (req, res) => {
@@ -507,8 +508,17 @@ const port = process.env.PORT || process.env.CRUSHEE_PORT || 1603
 const host = process.env.CRUSHEE_HOST || '127.0.0.1';
 app.listen(port, host, (e) => {
     console.log(`Starting server v${serverVersion} on ${host}:${port}`)
-    process.send({
-        type: "ready"
-    })
+    try {
+        if(typeof process.send == "function") {
+            process.send({
+                type: "ready"
+            })
+            console.log("Running as embedded server.")
+        } else {
+            console.log("Running as standalone server.")
+        }
+    } catch(e) {
+        console.log("Running as standalone server.")
+    }
 })
 
