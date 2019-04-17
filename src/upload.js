@@ -12,25 +12,14 @@ var Upload = function (file, callback) {
     this.file = file;
     this.callback = callback;
 };
-
-Upload.prototype.getType = function () {
-    return this.file.type;
-};
-Upload.prototype.getSize = function () {
-    return this.file.size;
-};
-Upload.prototype.getName = function () {
-    return this.file.name;
-};
 Upload.prototype.doUpload = function (file) {
     var that = this;
     var formData = new FormData();
     this.fileData = file
 
-    formData.append("file", this.file, this.getName());
+    formData.append("file", this.file, this.file.name);
     formData.append("settings", JSON.stringify(settings))
 
-    console.log(this.file)
     if(isApp) {
         // App local transfer
         sendMessage("upload", {
@@ -96,43 +85,6 @@ Upload.prototype.progressHandling = function (event) {
 
 
 
-$("html").bind("dragover", function (e) {
-    e.preventDefault();
-    $("#app").addClass("drop-hover");
-    return false;
-});
-$("html").bind("dragenter", function (e) {
-    e.preventDefault();
-    $("#app").addClass("drop-hover");
-    return false;
-});
-$("html").bind("dragexit", function (e) {
-    e.preventDefault();
-    $("#app").removeClass("drop-hover");
-    return false;
-});
-$("html").bind("dragleave", function (e) {
-    e.preventDefault();
-    // $("#app").removeClass("drop-hover"); 
-    return false;
-});
-$("html").bind("drop", function (e) {
-    $("#app").removeClass("drop-hover");
-    e.preventDefault();
-    e.stopPropagation();
-
-    var files = e.originalEvent.dataTransfer.files;
-    console.log(files)
-
-    for (var i = 0, file; file = files[i]; i++) {
-        console.log(file)
-        var upload = new Upload(file, UploadedFileCallback);
-        var fileData = fileUploading(file)
-        upload.doUpload(fileData);
-    }
-
-    return false;
-});
 
 
 function UploadedFileCallback(data, file) {
@@ -153,31 +105,6 @@ function UploadedFileCallback(data, file) {
 }
 
 
-var forcingFileNameChange = false;
-$("#file").on("change", function (e) {
-    if (forcingFileNameChange) {
-        forcingFileNameChange = false;
-        return false;
-    }
-
-    var files = e.target.files;
-
-    for (var i = 0, file; file = files[i]; i++) {
-        var upload = new Upload(file, UploadedFileCallback);
-        var fileData = fileUploading(file)
-        upload.doUpload(fileData);
-    }
-
-    // Reset so we can pick the same one again, if desired
-    $("#file").val("")
-
-});
-$(".action--add-file").click(function (e) {
-    e.preventDefault();
-    openFilePicker()
-    return false;
-});
-
 
 function openFilePicker() {
     console.log("Open file picker")
@@ -185,89 +112,8 @@ function openFilePicker() {
 }
 
 
-$(".action--reset-settings").click(function (e) {
-    console.log("Resetting settings")
-    e.preventDefault();
-    localStorage.clear();
-    location.reload();
-    return false;
-});
 
 
-function setFilename(filename) {
-    this.elem.find(".title").text(filename);
-}
-
-function setStatus(inStatus, context = this) {
-    console.log(inStatus)
-    let status = inStatus.toLowerCase()
-    context.status = status
-    context.elem.attr('data-status', status)
-    if (status === "done") {
-        var size = getFormattedSize(context.endSize)
-        var percent = getFormattedPercent
-        context.elem.find('.preview img').attr('src', context.preview)
-        context.elem.find('.details .title').text(context.filename)
-        context.elem.find('.details .subtitle').html(`<span>${size}</span><span>&centerdot;</span><span class="bold">${percent(context.startSize, context.endSize)}</span>`)
-        updateTotals()
-    } else if (status === "error") {
-        context.elem.find('.details .subtitle').html(`<span class="bold error">Error: Could not process context file</span>`)
-    } else if (status === "crushing") {
-        context.elem.find('.details .subtitle').html(`<span class="bold">Crushing...</span>`)
-    } else if (status === "deleted") {
-        var foundDeleted = false
-        for (var i = 0; i < files.list.length; i++) {
-            if (files.list[i].status != "deleted") {
-                foundDeleted = true
-                break
-            }
-        }
-        if (!foundDeleted) {
-            clearAllFiles()
-        }
-    }
-}
-
-function getFormattedSize(size) {
-    let absSize = Math.abs(size);
-    let outSize = size;
-    if (absSize < 1000) {
-        // bytes
-        outSize = size + " bytes"
-    } else if (absSize < 1000 * 1000) {
-        // KB
-        outSize = (size / 1000).toFixed(1) + "KB"
-    } else if (absSize < 1000 * 1000 * 1000) {
-        // MB
-        outSize = (size / (1000 * 1000)).toFixed(1) + "MB"
-    }
-    return outSize
-}
-
-function getFormattedPercent(start, end) {
-    if (start == 0 || end == 0)
-        return "0%"
-    if (start < end) {
-        return ((100 + ((end / start) * 100)).toFixed(0) + "% larger")
-    } else {
-        return ((100 - ((end / start) * 100)).toFixed(0) + "% smaller")
-    }
-
-}
-
-
-function updateTotals() {
-    var totalStart = 0;
-    var totalEnd = 0;
-    for (var i in files.list) {
-        totalStart += files.list[i].startSize
-        totalEnd += files.list[i].endSize
-    }
-
-    var size = getFormattedSize(totalStart - totalEnd)
-    var percent = getFormattedPercent(totalStart, totalEnd);
-    $(".page--files--after-list .totals").html(`Total saved: ${size} &middot; <span>${percent}</span>`)
-}
 
 
 function actionSaveButton(e) {
@@ -285,45 +131,6 @@ function actionMoreButton(e) {
     menu.toggleClass("active")
 }
 
-
-var files = {
-    add: function (data) {
-        var file = {
-            id: this.getID(),
-            name: data.name || 'Unknown file',
-            originalName: data.name || 'Unknown file',
-            status: 'uploading',
-            startSize: 0,
-            endSize: 0,
-            setStatus: setStatus,
-            setFilename: setFilename,
-            path: data.path || false,
-            bind: function () {
-                this.elem = $(".elem--file[data-id='" + this.id + "']")
-                this.elem.find('.actions .save-button').click(actionSaveButton)
-                this.elem.find('.actions .more-button').click(actionMoreButton)
-                this.elem.find('.preview').click(showComparison)
-            },
-            elem: false,
-            menuItemID: -1
-        }
-        this.list.push(file)
-        return file
-    },
-    list: [],
-    nextID: 0,
-    getID: function () { return this.nextID++ },
-    getFileID: function (uuid) {
-        var id = false
-        for (var i = 0; i < files.list.length; i++) {
-            if (files.list[i].uuid == uuid) {
-                id = i
-                break
-            }
-        }
-        return id
-    }
-}
 function fileUploading(file) {
 
     var file = files.add({
@@ -335,6 +142,27 @@ function fileUploading(file) {
     createNewFileHTML(file)
     return file
 }
+
+
+
+
+document.addEventListener('drop', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('File(s) you dragged here: ', e.dataTransfer.files);
+    return false;
+});
+
+document.addEventListener('dragover', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    //ipcRenderer.send('ondragstart', '/path/to/item')
+});
+
+
+
+
+
 
 var showingList = false;
 function createNewFileHTML(file) {
@@ -396,268 +224,6 @@ function showComparison(e) {
 
 
 
-$(".page--comparison").click(function () {
-    $(this).removeClass("show")
-})
-
-var beforeElem = $(".divider-wrap")
-$(".page--comparison").mousemove(function (e) {
-    beforeElem.width(e.pageX)
-})
-
-
-
-
-
-
-document.addEventListener('drop', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('File(s) you dragged here: ', e.dataTransfer.files);
-    return false;
-});
-
-document.addEventListener('dragover', function (e) {
-    e.preventDefault();
-    e.stopPropagation();
-    //ipcRenderer.send('ondragstart', '/path/to/item')
-});
-
-
-
-
-
-
-
-
-$("[data-linked]").on("change", function (e) {
-    var linkedTo = $(this).attr("data-linked");
-    $("input[data-linked='" + linkedTo + "']").val($(this).val());
-    syncInput(this)
-});
-
-$("[data-linked]").on("input", function (e) {
-    var linkedTo = $(this).attr("data-linked");
-    $("input[data-linked='" + linkedTo + "']").val($(this).val());
-    syncInput(this)
-});
-
-$(".input--toggle input").on("change", function (e) {
-    syncInput(this)
-});
-
-$(".sidebar--section input").on("change", function (e) {
-    updateSetting($(this).attr("name"), $(this).val())
-});
-
-$(".input--toggle").click(function () {
-    var input = $(this).children("input");
-    console.log(input.attr("value"))
-    input.attr("value", (input.attr("value") == "true" ? "false" : "true"))
-
-    syncInput(this)
-});
-
-function syncInput(elem) {
-    if ($(elem).hasClass("input--toggle")) {
-        $(elem).attr("data-value", $(elem).children("input").eq(0).attr("value"))
-        updateSetting($(elem).attr("data-linked"), $(elem).children("input").eq(0).attr("value"))
-    }
-    if ($(elem).attr("data-action")) {
-        try {
-            window[$(elem).attr("data-action")](elem)
-        } catch(e) {
-            console.log($(elem).attr("data-action"))
-        }
-        
-    }
-};
-
-function toggleDarkMode(elem) {
-    $("body").attr("data-theme", ($(elem).attr("data-value") == "true" ? "dark" : "light"))
-}
-window.toggleDarkMode = toggleDarkMode
-
-
-function changePreset(elem) {
-    var newPreset = $(elem).val()
-    if (newPreset != settings.app.qualityPreset) {
-        settings.app.qualityPreset = newPreset
-        loadPreset(settings.app.qualityPreset)
-    }
-}
-window.changePreset = changePreset
-
-var loadingPreset = false;
-function loadPreset(idx) {
-    if (loadingPreset) return false;
-    settings.jpg = Object.assign(settings.jpg, qualityPresets[idx].jpg)
-    settings.png = Object.assign(settings.png, qualityPresets[idx].png)
-    settings.webp = Object.assign(settings.webp, qualityPresets[idx].webp)
-    loadingPreset = true
-    readAllInputSources()
-    loadingPreset = false
-}
-
-
-function toggleAdvancedQuality() {
-    if (settings.app.advancedQuality == "false") {
-        //$(".sidebar--section .quality-basic").removeClass("hide")
-        $(".sidebar--section .quality-advanced").addClass("hide")
-        loadPreset(settings.app.qualityPreset)
-    } else {
-        // $(".sidebar--section .quality-basic").addClass("hide")
-        $(".sidebar--section .quality-advanced").removeClass("hide")
-    }
-}
-window.toggleAdvancedQuality = toggleAdvancedQuality
-
-
-var defaultSettings = {
-    resize: {
-        width: "",
-        height: "",
-        crop: false
-    },
-    jpg: {
-        quality: 95,
-        make: false,
-        subsampling: 1,
-        useOriginal: false
-    },
-    png: {
-        qualityMin: 50,
-        qualityMax: 95
-    },
-    gif: {
-        colors: 128
-    },
-    webp: {
-        quality: 90,
-        make: false,
-        only: false
-    },
-    app: {
-        qualityPreset: 4,
-        advancedQuality: "false",
-        overwite: false,
-        darkMode: false
-    }
-}
-
-
-
-const qualityPresets = [
-    // Low
-    {
-        jpg: {
-            quality: 77,
-            subsampling: 3,
-            useOriginal: false
-        },
-        png: {
-            qualityMin: 1,
-            qualityMax: 75
-        },
-        webp: {
-            quality: 70
-        }
-    },
-    // Medium
-    {
-        jpg: {
-            quality: 85,
-            subsampling: 2,
-            useOriginal: false
-        },
-        png: {
-            qualityMin: 10,
-            qualityMax: 85
-        },
-        webp: {
-            quality: 88
-        }
-    },
-    // High
-    {
-        jpg: {
-            quality: 94,
-            subsampling: 2,
-            useOriginal: false
-        },
-        png: {
-            qualityMin: 15,
-            qualityMax: 95
-        },
-        webp: {
-            quality: 92
-        }
-    },
-    // Lossless-ish
-    {
-        jpg: {
-            quality: 95,
-            subsampling: 1,
-            useOriginal: false
-        },
-        png: {
-            qualityMin: 25,
-            qualityMax: 98
-        },
-        webp: {
-            quality: 95
-        }
-    },
-]
-
-
-var getSettings = function () {
-    var encoded = localStorage.getItem("settings");
-    var parsed = JSON.parse(encoded);
-    var merged = Object.assign(defaultSettings, parsed);
-    return merged;
-}
-
-function writeSettings() {
-    var encoded = JSON.stringify(settings);
-    localStorage.setItem("settings", encoded);
-}
-
-var settings = getSettings();
-
-
-function updateSetting(setting, value) {
-    var keys = setting.split(".");
-    if (keys.length == 1)
-        settings[keys[0]] = value;
-    else if (keys.length == 2)
-        settings[keys[0]][keys[1]] = value;
-    else if (keys.length == 3)
-        settings[keys[0]][keys[1]][keys[2]] = value;
-
-    writeSettings();
-}
-
-function readAllInputSources() {
-    $(".sidebar--section input").each(function (e) {
-        var input = $(this);
-        var settingKeys = input.attr("name").split(".");
-        var arr = settings;
-        for (var i = 0; i < settingKeys.length; i++) {
-            arr = arr[settingKeys[i]];
-        }
-        $(this).val(arr);
-    });
-    resyncAllInputs();
-}
-
-
-
-function resyncAllInputs() {
-    $("[data-linked]").each(function () {
-        syncInput(this)
-    });
-}
 
 
 
@@ -669,60 +235,6 @@ function resyncAllInputs() {
 
 
 
-
-
-
-$(".action--download-all").click(function () {
-    var that = this;
-    var formData = new FormData();
-    var filesList = [];
-
-    for (var i = 0; i < files.list.length; i++) {
-        if (files.list[i].status == "done") {
-            filesList.push({
-                name: files.list[i].name,
-                uuid: files.list[i].uuid
-            });
-        }
-    }
-
-    console.log(JSON.stringify(filesList))
-    formData.append("files", JSON.stringify(filesList))
-
-    $.ajax({
-        type: "POST",
-        url: "/zip",
-        xhr: function () {
-            var myXhr = $.ajaxSettings.xhr();
-            //myXhr.upload.file = file;
-            //myXhr.upload.callback = that.callback;
-            //myXhr.upload.upload = that;
-            if (myXhr.upload) {
-                //myXhr.upload.addEventListener('progress', that.progressHandling, false);
-            }
-            return myXhr;
-        },
-        success: function (data) {
-            console.log(data)
-            if (parseBool(settings.app.overwrite) && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
-                for (var i = 0; i < files.list.length; i++) {
-                    downloadFile(files.list[i])
-                }
-            } else {
-                window.location = data.dl
-            }
-        },
-        error: function (error) {
-            console.log(error)
-        },
-        async: true,
-        data: formData,
-        cache: false,
-        contentType: false,
-        processData: false,
-        timeout: 60000
-    });
-});
 
 
 function downloadFile(file) {
@@ -742,7 +254,7 @@ function downloadFile(file) {
 
 
 
-$(".action--recompress").click(recrushAll);
+
 
 
 function recrushAll() {
@@ -760,9 +272,9 @@ function recrushAll() {
 }
 
 
-$(".action--clear-all").click(clearAllFiles);
 
-function clearAllFiles() {
+
+export function clearAllFiles() {
     sendMessage("clear", getAllUUIDS())
     files.nextID = 0
     files.list = []
@@ -783,16 +295,7 @@ function getAllUUIDS() {
 }
 
 
-$(".action--display-settings").click(function (e) {
-    if ($("body").hasClass("display-settings")) {
-        $("body").removeClass("display-settings")
-        showBackButton(false)
-    } else {
-        $("body").addClass("display-settings")
-        showBackButton(true)
-    }
-    $(".sidebar").addClass("animate")
-})
+
 
 var backButtonDepth = 0
 function showBackButton(show) {
@@ -808,16 +311,6 @@ function showBackButton(show) {
 }
 
 
-
-$(".action--back-button").click(function (e) {
-    if ($("body").hasClass("display-settings")) {
-        $("body").removeClass("display-settings")
-        showBackButton(false)
-    } else if ($(".page--files").hasClass("show")) {
-        clearAllFiles()
-        showBackButton(false)
-    }
-})
 
 function recrush(file) {
     sendMessage("recrush", {
@@ -835,23 +328,6 @@ function recrush(file) {
 
 
 var menuItemID = -1;
-
-$(".page--menu-layer .bg").click(function (e) {
-    $(".elem--menu").removeClass("active")
-})
-
-$(".elem--menu.single-file .download").click(function (e) {
-    downloadFile(files.list[files.menuItemID])
-    $(".elem--menu").removeClass("active")
-})
-$(".elem--menu.single-file .recrush").click(function (e) {
-    recrush(files.list[files.menuItemID])
-    $(".elem--menu").removeClass("active")
-})
-$(".elem--menu.single-file .remove").click(function (e) {
-    deleteUUID(files.list[files.menuItemID].uuid)
-    $(".elem--menu").removeClass("active")
-})
 
 
 function deleteUUID(uuid) {
@@ -873,75 +349,6 @@ function deleteUUID(uuid) {
 
 
 
-var ws = null;
-var reconnect = false;
-var connecting = false;
-function websocketConnect() {
-    if (connecting) return false;
-    connecting = true
-    ws = new WebSocket('ws://' + window.location.host + '/messages');
-
-    ws.onopen = function () {
-        console.log('Connected to server!')
-        connecting = false
-        clearInterval(reconnect)
-        sendMessage('check', getAllUUIDS())
-    }
-
-    ws.onmessage = function (ev) {
-        var data = JSON.parse(ev.data)
-        console.log(data)
-        if (typeof data.type != "undefined")
-            switch (data.type) {
-                case "check":
-                    checkUUIDs(data.payload);
-                    break;
-                case "update":
-                    var id = files.getFileID(data.payload.uuid)
-                    if (id !== false) {
-                        for (var key in data.payload.file) {
-                            files.list[id][key] = data.payload.file[key]
-                        }
-                        files.list[id].setStatus(data.payload.file.status)
-                    }
-                    break;
-                case "upload":
-                    var id = data.payload.id;
-                    for (var key in data.payload.file) {
-                        files.list[id][key] = data.payload.file[key]
-                    }
-                    files.list[id].setStatus(data.payload.file.status)
-                    break;
-                case "replace":
-                    var id = files.getFileID(data.payload.oldUUID)
-                    for (var key in data.payload.file) {
-                        files.list[id][key] = data.payload.file[key]
-                    }
-                    files.list[id].setStatus(data.payload.file.status)
-                    break;
-
-            }
-    }
-
-    ws.onclose = (ev) => {
-        console.warn("Lost connection to server.")
-        reconnect = setInterval(websocketConnect, 500)
-    }
-
-    ws.onerror = (ev) => {
-        console.error(ev)
-    }
-
-}
-
-const sendMessage = (type, payload = {}) => {
-    ws.send(JSON.stringify({
-        type,
-        payload
-    }))
-}
-
-
 function checkUUIDs(uuids) {
     files.list.forEach((file) => {
         if (uuids.indexOf(file.uuid) === -1) {
@@ -952,7 +359,3 @@ function checkUUIDs(uuids) {
 }
 
 
-readAllInputSources()
-resyncAllInputs()
-
-websocketConnect()
