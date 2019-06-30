@@ -507,8 +507,13 @@ const port = process.env.PORT || process.env.CRUSHEE_PORT || 1603
 const host = process.env.CRUSHEE_HOST || '127.0.0.1';
 app.listen(port, host, (e) => {
     console.log(`Starting server v${serverVersion} on ${host}:${port}`)
-    process.send({
-        type: "ready"
-    })
+    try {
+        process.send({
+            type: "ready"
+        })
+    } catch(e) {
+        console.log("No parent process available. Must be running as a server.")
+    }
+    
 })
 
