@@ -9,6 +9,8 @@
     box-sizing: border-box;
     padding-bottom: 100px;
 
+    will-change: transform;
+
     //transition: transform 0.9s, box-shadow 0.9s;
     transform: translateY(130%);
 

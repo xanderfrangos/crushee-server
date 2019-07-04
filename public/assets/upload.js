@@ -116,6 +116,8 @@ $("html").bind("drop", function (e) {
     e.preventDefault();
     e.stopPropagation();
 
+    setStatusBar("Processing file(s)", "working")
+
     var files = e.originalEvent.dataTransfer.files;
     console.log(files)
 
@@ -156,6 +158,8 @@ $("#file").on("change", function (e) {
     }
 
     var files = e.target.files;
+
+    setStatusBar("Processing file(s)", "working")
 
     for (var i = 0, file; file = files[i]; i++) {
         var upload = new Upload(file, UploadedFileCallback);
@@ -198,6 +202,7 @@ function setStatus(inStatus, context = this) {
     let status = inStatus.toLowerCase()
     context.status = status
     context.elem.attr('data-status', status)
+    updateStatusBarProgress()
     if (status === "done") {
         var size = getFormattedSize(context.endSize)
         var percent = getFormattedPercent
@@ -262,6 +267,31 @@ function updateTotals() {
     var size = getFormattedSize(totalStart - totalEnd)
     var percent = getFormattedPercent(totalStart, totalEnd);
     $(".page--files--after-list .totals").html(`Total saved: ${size} &middot; <span>${percent}</span>`)
+}
+
+function updateStatusBarProgress() {
+    let done = 0,
+        crushing = 0,
+        error = 0
+    for (var i in files.list) {
+        const file = files.list[i]
+        console.log(file)
+        if (file.status == "done") done++
+        else if (file.status == "crushing") crushing++
+        else if (file.status == "error") error++
+    }
+    if(crushing > 0) {
+        setStatusBar(`Crushed ${files.list.length - crushing} of ${files.list.length}`, "working")
+    } else if(files.list.length > 0) {
+        setStatusBar(`Crushed ${done} files!`, "done")
+    }
+}
+
+
+function setStatusBar(text, icon = "none") {
+    $(".elem--status-bar--left .text").text(text)
+    $(".elem--status-bar--left .icon").removeClass("show")
+    $(".elem--status-bar--left .icon." + icon).addClass("show")
 }
 
 
@@ -709,8 +739,16 @@ $(".action--download-all").click(function () {
     });
 });
 
+let downloadBatchSize = 0
 
-function downloadFile(file) {
+function downloadFile(file, doStatusBar = true) {
+
+    if(doStatusBar) {
+        setStatusBar("Saving...", "working")
+    }
+
+    downloadBatchSize++
+    
     if (file.status != "done") {
         console.log("File not ready to be downloaded!")
         return false
@@ -718,7 +756,16 @@ function downloadFile(file) {
     console.log(file)
     if (settings.app.overwrite == "true" && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
         window.electron.download(window.location.origin + "/" + file.url, file.path, file.name, (cb) => {
+            downloadBatchSize--
             console.log(cb)
+            if(downloadBatchSize == 0) {
+                if (cb.status == "done") {
+                    setStatusBar("Saved file(s)", "done")
+                } else {
+                    setStatusBar("Error saving file(s)", "error")
+                }
+            }
+            
         })
     } else {
         window.location = file.url
@@ -731,6 +778,8 @@ $(".action--recompress").click(recrushAll);
 
 
 function recrushAll() {
+    setStatusBar("Recrushing all files", "working")
+
     var uuids = []
     for (var i = 0; i < files.list.length; i++) {
         if (files.list[i].status == "done") {
@@ -754,6 +803,7 @@ function clearAllFiles() {
     $(".page--files--list").html("")
     $(".page--files").removeClass("show")
     updateTotals()
+    updateStatusBarProgress()
     showingList = false
     showBackButton(false)
 }
