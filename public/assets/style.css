@@ -37,7 +37,8 @@ h1 {
 * 2. Show the overflow in Edge and IE.
 */
 hr {
-  box-sizing: content-box;
+  -webkit-box-sizing: content-box;
+          box-sizing: content-box;
   /* 1 */
   height: 0;
   /* 1 */
@@ -74,7 +75,8 @@ abbr[title] {
   /* 1 */
   text-decoration: underline;
   /* 2 */
-  text-decoration: underline dotted;
+  -webkit-text-decoration: underline dotted;
+          text-decoration: underline dotted;
   /* 2 */
 }
 
@@ -221,7 +223,8 @@ fieldset {
 *    `fieldset` elements in all browsers.
 */
 legend {
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   /* 1 */
   color: inherit;
   /* 2 */
@@ -255,7 +258,8 @@ textarea {
 */
 [type="checkbox"],
 [type="radio"] {
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   /* 1 */
   padding: 0;
   /* 2 */
@@ -362,7 +366,10 @@ html, body {
   color: var(--text-base);
   line-height: 1;
   background: var(--base-bg);
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
 @media (max-width: 960px) {
   html, body {
@@ -389,7 +396,8 @@ img {
 }
 
 shadow, .button, .sidebar input, .input--toggle > div, .input--range .range::-webkit-slider-thumb, .elem--file .preview, .elem--file .actions .save-button, .elem--menu--inner, .elem--mobile-nav, .floating-buttons, .page--comparison .bar, .page--comparison .bar:before, .page--comparison .bar:after {
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  -webkit-box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
 }
 
 input[type=number]::-webkit-inner-spin-button,
@@ -408,17 +416,29 @@ input[type=number]::-webkit-outer-spin-button {
   text-align: center;
   text-transform: uppercase;
   margin: 0px 5px;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
   cursor: pointer;
+  -webkit-transition: background 0.1s;
   transition: background 0.1s;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 .button.big {
   font-size: 20px;
   padding: 10px 30px;
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 .button.primary {
   background: var(--color-primary);
@@ -482,7 +502,8 @@ input[type=number]::-webkit-outer-spin-button {
   right: 0;
   height: 100vh;
   width: 300px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   z-index: 4;
   overflow: auto;
   background: var(--sidebar-bg);
@@ -493,8 +514,10 @@ input[type=number]::-webkit-outer-spin-button {
     bottom: 0px;
     height: 100%;
     width: 100%;
-    box-shadow: none;
-    transform: translateX(100%);
+    -webkit-box-shadow: none;
+            box-shadow: none;
+    -webkit-transform: translateX(100%);
+            transform: translateX(100%);
   }
   .sidebar > .inner {
     max-width: 420px;
@@ -503,35 +526,51 @@ input[type=number]::-webkit-outer-spin-button {
 }
 .sidebar > .inner {
   height: 100%;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   padding: 10px;
   position: relative;
 }
 .sidebar .row {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 .sidebar .row.center {
-  justify-content: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
 }
 .sidebar .col {
   padding: 10px 10px;
 }
 .sidebar .col.flex-1 {
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 .sidebar input {
   display: block;
   width: 100%;
   padding: 6px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   background: var(--sidebar-input-bg);
   border: 2px solid var(--sidebar-input-border);
   border-radius: 2px;
   color: var(--sidebar-input-color);
   font-size: 14px;
+  -webkit-transition: background 0.1s, border 0.1s;
   transition: background 0.1s, border 0.1s;
 }
 .sidebar input[type=number] {
@@ -569,6 +608,8 @@ input[type=number]::-webkit-outer-spin-button {
   display: none;
 }
 body.is-app .app-only {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
 }
 
@@ -581,7 +622,9 @@ body.is-app .app-only {
   text-align: center;
   padding: 15px 0;
   width: 100%;
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
 }
 
 .input--toggle {
@@ -600,8 +643,10 @@ body.is-app .app-only {
   height: 100%;
   background: var(--sidebar-input-bg);
   border: 2px solid var(--sidebar-input-border);
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   border-radius: 20px;
+  -webkit-transition: background 0.1s, border 0.1s, opacity 0.1s;
   transition: background 0.1s, border 0.1s, opacity 0.1s;
   z-index: 1;
   opacity: 0.6;
@@ -613,11 +658,15 @@ body.is-app .app-only {
   z-index: 2;
   width: 22px;
   height: 22px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   background: var(--sidebar-slider-inactive-thumb-bg);
   border: 2px solid var(--sidebar-slider-inactive-thumb-border);
   border-radius: 20px;
+  -webkit-transition: background 0.1s, border 0.1s, -webkit-transform 0.1s;
+  transition: background 0.1s, border 0.1s, -webkit-transform 0.1s;
   transition: background 0.1s, border 0.1s, transform 0.1s;
+  transition: background 0.1s, border 0.1s, transform 0.1s, -webkit-transform 0.1s;
 }
 .input--toggle:hover:before {
   border-color: var(--sidebar-input-focus-border);
@@ -634,7 +683,8 @@ body.is-app .app-only {
   border-color: var(--sidebar-slider-active-thumb-border);
 }
 .input--toggle[data-value="true"] > div {
-  transform: translateX(26px);
+  -webkit-transform: translateX(26px);
+          transform: translateX(26px);
   background: var(--sidebar-input-focus-bg);
   border-color: var(--sidebar-input-focus-border);
   background: var(--sidebar-slider-active-thumb-bg);
@@ -642,15 +692,28 @@ body.is-app .app-only {
 }
 
 .input--range {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 .input--range .range {
-  flex: 2;
+  -webkit-box-flex: 2;
+      -ms-flex: 2;
+          flex: 2;
   display: block;
-  appearance: none;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   width: 100%;
   background: transparent;
   border: none;
@@ -678,7 +741,8 @@ body.is-app .app-only {
   border: 2px solid var(--sidebar-slider-active-thumb-border);
   height: 22px;
   width: 22px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   border-radius: 20px;
   background: var(--sidebar-slider-active-thumb-bg);
   cursor: pointer;
@@ -709,6 +773,7 @@ body.is-app .app-only {
   cursor: pointer;
   background: var(--sidebar-input-border);
   border-radius: 3px;
+  -webkit-transition: background 0.1s;
   transition: background 0.1s;
 }
 .input--range .range:focus::-webkit-slider-runnable-track {
@@ -752,12 +817,14 @@ body.is-app .app-only {
 }
 .input--range .val {
   width: 52px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
 
 @media (max-width: 960px) {
   body.display-settings .sidebar {
-    transform: translateX(0%);
+    -webkit-transform: translateX(0%);
+            transform: translateX(0%);
   }
 }
 #app.no-sidebar {
@@ -770,8 +837,9 @@ body.is-app .app-only {
 .base {
   padding-right: 300px;
   height: 100%;
-  box-sizing: border-box;
-  padding-bottom: 24px;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
+  padding-bottom: 23px;
 }
 @media (max-width: 960px) {
   .base {
@@ -808,7 +876,10 @@ body.is-app .app-only {
 }
 
 .elem--file {
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
 .elem--file:nth-of-type(odd) {
   background: var(--base-bg-alt);
@@ -816,11 +887,18 @@ body.is-app .app-only {
 .elem--file > .inner {
   padding: 20px;
   width: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
   direction: row;
-  justify-content: space-between;
-  align-items: center;
-  box-sizing: border-box;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
 }
 .elem--file .preview {
   will-change: transform;
@@ -850,6 +928,7 @@ body.is-app .app-only {
   height: 100%;
   background: var(--color-primary);
   opacity: 0.9;
+  -webkit-transition: width 0.1s, opacity 0.3s 0.2s;
   transition: width 0.1s, opacity 0.3s 0.2s;
   z-index: 1;
   opacity: 0;
@@ -860,9 +939,15 @@ body.is-app .app-only {
   left: 0;
   width: 100%;
   height: 100%;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
   display: none;
   will-change: transform, opacity;
 }
@@ -872,15 +957,30 @@ body.is-app .app-only {
   fill: white;
   width: 30px;
   height: 30px;
-  animation: compareIconIn 0.23s;
+  -webkit-animation: compareIconIn 0.23s;
+          animation: compareIconIn 0.23s;
 }
-@keyframes compareIconIn {
+@-webkit-keyframes compareIconIn {
   0% {
-    transform: scale(0.75);
+    -webkit-transform: scale(0.75);
+            transform: scale(0.75);
     opacity: 0;
   }
   100% {
-    transform: scale(1);
+    -webkit-transform: scale(1);
+            transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes compareIconIn {
+  0% {
+    -webkit-transform: scale(0.75);
+            transform: scale(0.75);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: scale(1);
+            transform: scale(1);
     opacity: 1;
   }
 }
@@ -894,7 +994,16 @@ body.is-app .app-only {
   height: 100%;
   background: var(--color-primary);
   opacity: 0.7;
-  animation: compareIconBG 0.2s;
+  -webkit-animation: compareIconBG 0.2s;
+          animation: compareIconBG 0.2s;
+}
+@-webkit-keyframes compareIconBG {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 @keyframes compareIconBG {
   0% {
@@ -906,7 +1015,19 @@ body.is-app .app-only {
 }
 .elem--file .preview img {
   display: none;
-  animation: filePreviewIn 0.3s;
+  -webkit-animation: filePreviewIn 0.3s;
+          animation: filePreviewIn 0.3s;
+}
+@-webkit-keyframes filePreviewIn {
+  0% {
+    opacity: 0;
+  }
+  10% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 @keyframes filePreviewIn {
   0% {
@@ -921,7 +1042,9 @@ body.is-app .app-only {
 }
 .elem--file .details {
   padding: 0 20px;
-  flex: 1;
+  -webkit-box-flex: 1;
+      -ms-flex: 1;
+          flex: 1;
   min-width: 0;
 }
 .elem--file .details span + span {
@@ -949,24 +1072,46 @@ body.is-app .app-only {
 .elem--file .actions .save-button {
   width: 56px;
   height: 56px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
   background: var(--color-primary);
-  align-content: center;
-  justify-content: center;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   justify-items: center;
   border-radius: 100px;
   cursor: pointer;
+  -webkit-transition: background 0.1s;
   transition: background 0.1s;
-  animation: saveButtonIn 0.3s;
+  -webkit-animation: saveButtonIn 0.3s;
+          animation: saveButtonIn 0.3s;
   display: none;
+}
+@-webkit-keyframes saveButtonIn {
+  0% {
+    -webkit-transform: scale(0) rotate(60deg);
+            transform: scale(0) rotate(60deg);
+  }
+  100% {
+    -webkit-transform: scale(1) rotate(0deg);
+            transform: scale(1) rotate(0deg);
+  }
 }
 @keyframes saveButtonIn {
   0% {
-    transform: scale(0) rotate(60deg);
+    -webkit-transform: scale(0) rotate(60deg);
+            transform: scale(0) rotate(60deg);
   }
   100% {
-    transform: scale(1) rotate(0deg);
+    -webkit-transform: scale(1) rotate(0deg);
+            transform: scale(1) rotate(0deg);
   }
 }
 .elem--file .actions .save-button:hover {
@@ -982,23 +1127,35 @@ body.is-app .app-only {
 .elem--file .actions .more-button {
   width: 56px;
   height: 56px;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
-  align-content: center;
-  justify-content: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   justify-items: center;
   border-radius: 100px;
   cursor: pointer;
+  -webkit-transition: background 0.1s;
   transition: background 0.1s;
-  animation: saveButtonIn 0.3s;
+  -webkit-animation: saveButtonIn 0.3s;
+          animation: saveButtonIn 0.3s;
   display: none;
 }
 @keyframes saveButtonIn {
   0% {
-    transform: scale(0) rotate(60deg);
+    -webkit-transform: scale(0) rotate(60deg);
+            transform: scale(0) rotate(60deg);
   }
   100% {
-    transform: scale(1) rotate(0deg);
+    -webkit-transform: scale(1) rotate(0deg);
+            transform: scale(1) rotate(0deg);
   }
 }
 @media (max-width: 960px) {
@@ -1027,7 +1184,19 @@ body.is-app .app-only {
   }
 }
 .elem--file[data-status='uploading'] .preview > .inner {
-  animation: uploadingPulse 1s infinite;
+  -webkit-animation: uploadingPulse 1s infinite;
+          animation: uploadingPulse 1s infinite;
+}
+@-webkit-keyframes uploadingPulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.75;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 @keyframes uploadingPulse {
   0% {
@@ -1044,7 +1213,8 @@ body.is-app .app-only {
   opacity: 0.85;
 }
 .elem--file[data-status='crushing'] .preview > .inner {
-  animation: uploadingPulse 0.5s infinite;
+  -webkit-animation: uploadingPulse 0.5s infinite;
+          animation: uploadingPulse 0.5s infinite;
 }
 @keyframes uploadingPulse {
   0% {
@@ -1062,15 +1232,20 @@ body.is-app .app-only {
   width: 100%;
 }
 .elem--file[data-status='done'] .preview {
+  cursor: -webkit-zoom-in;
   cursor: zoom-in;
 }
 .elem--file[data-status='done'] .preview:hover .compare-hover {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
 }
 .elem--file[data-status='done'] .preview img {
   display: block;
 }
 .elem--file[data-status='done'] .actions .more-button {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
 }
 
@@ -1117,16 +1292,32 @@ body.is-app .app-only {
   width: 200px;
   border-radius: 5px;
   overflow: hidden;
-  transform-origin: 100% 0%;
-  animation: menuIn 0.05s;
+  -webkit-transform-origin: 100% 0%;
+          transform-origin: 100% 0%;
+  -webkit-animation: menuIn 0.05s;
+          animation: menuIn 0.05s;
 }
-@keyframes menuIn {
+@-webkit-keyframes menuIn {
   0% {
-    transform: scale(0.9);
+    -webkit-transform: scale(0.9);
+            transform: scale(0.9);
     opacity: 0;
   }
   100% {
-    transform: scale(1);
+    -webkit-transform: scale(1);
+            transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes menuIn {
+  0% {
+    -webkit-transform: scale(0.9);
+            transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    -webkit-transform: scale(1);
+            transform: scale(1);
     opacity: 1;
   }
 }
@@ -1138,8 +1329,12 @@ body.is-app .app-only {
   background: white;
   color: black;
   cursor: pointer;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 @media (max-width: 960px) {
   .elem--menu--inner .item {
@@ -1210,14 +1405,24 @@ body.is-app .app-only {
   z-index: 2;
 }
 .elem--mobile-nav .inner {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
   padding: 0 8px;
 }
 .elem--mobile-nav .inner > div {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 .elem--mobile-nav .inner > div > div {
   padding: 16px 8px;
@@ -1242,31 +1447,43 @@ body.is-app .app-only {
   z-index: 1;
   border-radius: 100px;
   opacity: 0;
+  -webkit-transition: opacity 0.12s 0.01s;
   transition: opacity 0.12s 0.01s;
 }
 .elem--mobile-nav .icon:active:before {
   opacity: 0.15;
+  -webkit-transition: opacity 0s 0s;
   transition: opacity 0s 0s;
 }
 .elem--mobile-nav .back-button {
-  transform: translateX(-30px);
+  -webkit-transform: translateX(-30px);
+          transform: translateX(-30px);
   opacity: 0;
 }
 .elem--mobile-nav .back-button + .text {
-  transform: translateX(-40px);
+  -webkit-transform: translateX(-40px);
+          transform: translateX(-40px);
 }
 .elem--mobile-nav .back-button.animate {
+  -webkit-transition: opacity 0.23s, -webkit-transform 0.23s;
+  transition: opacity 0.23s, -webkit-transform 0.23s;
   transition: transform 0.23s, opacity 0.23s;
+  transition: transform 0.23s, opacity 0.23s, -webkit-transform 0.23s;
 }
 .elem--mobile-nav .back-button.animate + .text {
+  -webkit-transition: opacity 0.23s, -webkit-transform 0.23s;
+  transition: opacity 0.23s, -webkit-transform 0.23s;
   transition: transform 0.23s, opacity 0.23s;
+  transition: transform 0.23s, opacity 0.23s, -webkit-transform 0.23s;
 }
 body.show-back-button .elem--mobile-nav .back-button {
-  transform: translateX(0px);
+  -webkit-transform: translateX(0px);
+          transform: translateX(0px);
   opacity: 1;
 }
 body.show-back-button .elem--mobile-nav .back-button + .text {
-  transform: translateX(0px);
+  -webkit-transform: translateX(0px);
+          transform: translateX(0px);
 }
 
 .elem--status-bar {
@@ -1280,12 +1497,17 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   width: 100%;
   font-size: 10.5px;
   padding: 5px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   font-family: "Open Sans", sans-serif;
   font-weight: normal;
   border-top: 1px solid #565656;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  justify-content: space-between;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   will-change: transform;
 }
 .elem--status-bar svg {
@@ -1305,15 +1527,29 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   fill: #4fdc57;
 }
 .elem--status-bar .icon.working {
-  animation: elem--status-bar--working 1.0s infinite;
-  transform-origin: 38.5% 50%;
+  -webkit-animation: elem--status-bar--working 1.0s infinite;
+          animation: elem--status-bar--working 1.0s infinite;
+  -webkit-transform-origin: 38.5% 50%;
+          transform-origin: 38.5% 50%;
+}
+@-webkit-keyframes elem--status-bar--working {
+  0% {
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+  }
 }
 @keyframes elem--status-bar--working {
   0% {
-    transform: rotate(0deg);
+    -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
   }
   100% {
-    transform: rotate(360deg);
+    -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
   }
 }
 .elem--status-bar .icon.error {
@@ -1321,18 +1557,33 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
 }
 
 .elem--status-bar--left {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  align-items: center;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
 }
 
 .page--start {
   text-align: center;
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: column;
+          flex-direction: column;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
   justify-items: center;
-  align-content: center;
-  user-select: none;
+  -ms-flex-line-pack: center;
+      align-content: center;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
   cursor: pointer;
   z-index: 1;
 }
@@ -1360,16 +1611,17 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   left: 0;
   width: 100%;
   height: 100%;
+  height: calc(100% - 70px);
   z-index: 2;
-  box-shadow: 0 -15px 35px rgba(33, 33, 33, 0.5);
-  box-sizing: border-box;
-  padding-bottom: 100px;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   will-change: transform;
-  transform: translateY(130%);
+  -webkit-transform: translateY(130%);
+          transform: translateY(130%);
 }
 .page--files.show {
-  transform: translateY(0%);
-  box-shadow: 0 20px 35px rgba(33, 33, 33, 0.5);
+  -webkit-transform: translateY(0%);
+          transform: translateY(0%);
 }
 .page--files.show ~ .floating-buttons {
   display: block;
@@ -1402,9 +1654,16 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
 }
 
 .page--files--after-list {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  justify-content: space-between;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: justify;
+      -ms-flex-pack: justify;
+          justify-content: space-between;
   border-top: 1px solid var(--base-bg-alt);
 }
 .page--files--after-list > * {
@@ -1424,7 +1683,10 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
 .page--files--after-list .add-file {
   display: block;
   cursor: pointer;
-  user-select: none;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
 }
 .page--files--after-list .add-file:hover {
   opacity: 0.65;
@@ -1436,7 +1698,8 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   left: 0;
   width: 100%;
   padding: 15px 8px;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   display: none;
   z-index: 4;
   background: var(--base-bg-alt);
@@ -1448,9 +1711,11 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   .floating-buttons .button {
     border-radius: 0;
     margin: 0;
-    box-shadow: none;
+    -webkit-box-shadow: none;
+            box-shadow: none;
     padding: 10px 16px;
-    flex-wrap: wrap;
+    -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
   }
   .floating-buttons .button.big {
     font-size: 18px;
@@ -1469,9 +1734,16 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   }
 }
 .floating-buttons > .inner {
+  display: -webkit-box;
+  display: -ms-flexbox;
   display: flex;
-  flex-direction: row;
-  justify-content: stretch;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-direction: row;
+          flex-direction: row;
+  -webkit-box-pack: stretch;
+      -ms-flex-pack: stretch;
+          justify-content: stretch;
   max-width: 700px;
   margin: auto;
 }
@@ -1482,12 +1754,23 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
   left: 0;
   width: 100%;
   height: 100%;
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+          box-sizing: border-box;
   z-index: 20;
   display: none;
   overflow: hidden;
+  cursor: -webkit-zoom-out;
   cursor: zoom-out;
-  animation: comparisonIn 0.3s;
+  -webkit-animation: comparisonIn 0.3s;
+          animation: comparisonIn 0.3s;
+}
+@-webkit-keyframes comparisonIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 @keyframes comparisonIn {
   0% {

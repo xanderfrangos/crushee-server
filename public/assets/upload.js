@@ -121,15 +121,20 @@ $("html").bind("drop", function (e) {
     var files = e.originalEvent.dataTransfer.files;
     console.log(files)
 
+    addFiles(files)
+
+    return false;
+});
+
+
+function addFiles(files) {
     for (var i = 0, file; file = files[i]; i++) {
         console.log(file)
         var upload = new Upload(file, UploadedFileCallback);
         var fileData = fileUploading(file)
         upload.doUpload(fileData);
     }
-
-    return false;
-});
+}
 
 
 function UploadedFileCallback(data, file) {
@@ -188,6 +193,7 @@ $(".action--reset-settings").click(function (e) {
     console.log("Resetting settings")
     e.preventDefault();
     localStorage.clear();
+    localStorage.setItem("appReset", "true")
     location.reload();
     return false;
 });
@@ -349,7 +355,18 @@ var files = {
         return id
     }
 }
-function fileUploading(file) {
+function fileUploading(fileObj) {
+
+    var file = fileObj
+
+    if(typeof file == "string") {
+        file = {
+            name: file.substring(file.lastIndexOf('\\') + 1),
+            path: file
+        }
+    }
+
+    console.log("fileUploading", file)
 
     var file = files.add({
         name: file.name,
@@ -777,7 +794,12 @@ function downloadFile(file, doStatusBar = true) {
 $(".action--recompress").click(recrushAll);
 
 
+var recrushTimeout = false
+
 function recrushAll() {
+    if(recrushTimeout)
+        return false;
+
     setStatusBar("Recrushing all files", "working")
 
     var uuids = []
@@ -791,6 +813,8 @@ function recrushAll() {
         uuids,
         options: JSON.stringify(settings)
     })
+    recrushTimeout = true
+    setTimeout(() => {recrushTimeout = false}, 1000)
 }
 
 
@@ -988,3 +1012,18 @@ function checkUUIDs(uuids) {
 
 
 websocketConnect()
+
+
+
+
+
+
+
+
+
+ // Show "App reset" message
+
+if(localStorage.getItem("appReset") == "true") {
+    localStorage.setItem("appReset", "false")
+    window.setStatusBar("App preferences reset", "done")
+}
