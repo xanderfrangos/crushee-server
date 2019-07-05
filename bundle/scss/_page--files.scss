@@ -35,6 +35,9 @@
     flex-direction: row;
     justify-content: space-between;
     border-top: 1px solid var(--base-bg-alt);
+    position: sticky;
+    bottom: 0;
+    background: var(--base-bg);
 
     & > * {
         font-size: 13px;

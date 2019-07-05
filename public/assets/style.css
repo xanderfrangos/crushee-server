@@ -612,6 +612,9 @@ body.is-app .app-only {
   display: -ms-flexbox;
   display: flex;
 }
+body.is-app .not-app-only {
+  display: none;
+}
 
 .sidebar--header {
   font-size: 14px;
@@ -1665,6 +1668,10 @@ body.show-back-button .elem--mobile-nav .back-button + .text {
       -ms-flex-pack: justify;
           justify-content: space-between;
   border-top: 1px solid var(--base-bg-alt);
+  position: -webkit-sticky;
+  position: sticky;
+  bottom: 0;
+  background: var(--base-bg);
 }
 .page--files--after-list > * {
   font-size: 13px;

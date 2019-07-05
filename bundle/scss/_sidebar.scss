@@ -137,6 +137,13 @@
                 }
             }
         }
+        .not-app-only {
+            @at-root {
+                body.is-app .not-app-only {
+                    display: none;
+                }
+            }
+        }
 }
 
 .sidebar--header {
