@@ -266,8 +266,10 @@ function updateTotals() {
     var totalStart = 0;
     var totalEnd = 0;
     for (var i in files.list) {
-        totalStart += files.list[i].startSize
-        totalEnd += files.list[i].endSize
+        if(files.list[i].status == "done") {
+            totalStart += files.list[i].startSize
+            totalEnd += files.list[i].endSize
+        } 
     }
 
     var size = getFormattedSize(totalStart - totalEnd)
@@ -359,6 +361,7 @@ function fileUploading(fileObj) {
 
     var file = fileObj
 
+    // Convert string to match drag-and-drop format
     if(typeof file == "string") {
         file = {
             name: file.substring(file.lastIndexOf('\\') + 1),
@@ -920,7 +923,7 @@ function deleteUUID(uuid) {
             delete files.list[idx].setStatus("deleted")
         }
     })
-
+    updateTotals()
 }
 
 
