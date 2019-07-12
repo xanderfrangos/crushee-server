@@ -1,5 +1,5 @@
 .elem--status-bar {
-    height: 23px;
+    height: 24px;
     background: #484848;
     color: white;
     position: fixed;
@@ -7,8 +7,10 @@
     left: 0;
     z-index: 19;
     width: 100%;
-    font-size: 10.5px;
-    padding: 5px;
+    font-size: 11.5px;
+    padding: 5px 6px;
+    line-height: 1;
+    vertical-align: middle;
     box-sizing: border-box;
     font-family: "Open Sans", sans-serif;
     font-weight: normal;
@@ -23,6 +25,10 @@
         height: 17px;
         width: auto;
         padding-right: 5px;
+    }
+
+    .text {
+        will-change: transform;
     }
 
     .icon {

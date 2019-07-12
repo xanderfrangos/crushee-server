@@ -38,6 +38,7 @@
     position: sticky;
     bottom: 0;
     background: var(--base-bg);
+    box-shadow: 0 -3px 9px -5px rgba(0, 0, 0, 0.15);
 
     & > * {
         font-size: 13px;
