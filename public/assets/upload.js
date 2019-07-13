@@ -1,3 +1,15 @@
+var worker = new Worker('worker.js');
+
+worker.onmessage = (e) => {
+    console.log("Worker Message", e);
+}
+
+worker.postMessage({type: "ping"});
+
+
+
+
+
 parseBool = (value) => {
     let str = String(value)
     return (str.toLowerCase() === "true" || str.toLowerCase() === "yes" || str.toLowerCase() === "1" || value === 1 || value === true ? true : false)
@@ -25,7 +37,7 @@ Upload.prototype.doUpload = function (file) {
     formData.append("file", this.file, this.getName());
     formData.append("settings", JSON.stringify(settings))
 
-    console.log(this.file)
+    //console.log(this.file)
     if(isApp) {
         // App local transfer
         sendMessage("upload", {
@@ -79,7 +91,7 @@ Upload.prototype.progressHandling = function (event) {
     if (event.lengthComputable) {
         percent = Math.ceil(position / total * 100);
     }
-    console.log(event);
+    //console.log(event);
 
     event.target.file.elem.find('div.progress-bar').css("width", percent + "%");
 
@@ -283,7 +295,7 @@ function updateStatusBarProgress() {
         error = 0
     for (var i in files.list) {
         const file = files.list[i]
-        console.log(file)
+        //console.log(file)
         if (file.status == "done") done++
         else if (file.status == "crushing") crushing++
         else if (file.status == "error") error++
@@ -369,7 +381,7 @@ function fileUploading(fileObj) {
         }
     }
 
-    console.log("fileUploading", file)
+    //console.log("fileUploading", file)
 
     var file = files.add({
         name: file.name,
@@ -773,11 +785,11 @@ function downloadFile(file, doStatusBar = true) {
         console.log("File not ready to be downloaded!")
         return false
     }
-    console.log(file)
+    //console.log(file)
     if (settings.app.overwrite == "true" && typeof window.electron != "undefined" && typeof window.electron.download == "function") {
         window.electron.download(window.location.origin + "/" + file.url, file.path, file.name, (cb) => {
             downloadBatchSize--
-            console.log(cb)
+            //console.log(cb)
             if(downloadBatchSize == 0) {
                 if (cb.status == "done") {
                     setStatusBar("Saved file(s)", "done")
@@ -952,7 +964,7 @@ function websocketConnect() {
 
     ws.onmessage = function (ev) {
         var data = JSON.parse(ev.data)
-        console.log(data)
+        //console.log(data)
         if (typeof data.type != "undefined")
             switch (data.type) {
                 case "check":
